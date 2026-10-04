@@ -3,7 +3,7 @@ package tests;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import tests.login.TestData;
+import tests.testData.TestData;
 
 public class TestBase {
     protected TestData testData;
