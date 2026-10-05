@@ -14,8 +14,7 @@ public class LoginSpec {
     public static RequestSpecification loginRequestSpec = with()
             .log().all()
             .contentType(JSON)
-            .basePath("/api/v1")
-            .log().all();
+            .basePath("/api/v1");
 
     public static ResponseSpecification successfulLoginResponseSpec = new ResponseSpecBuilder()
             .log(ALL)

@@ -18,6 +18,7 @@ import static specs.RegistrationSpec.successfulRegistrationResponseSpec;
 public class TestAuthToken extends TestBase {
 
     @Test
+    @DisplayName("Успешная авторизация")
     public void successfulLoginTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -48,7 +49,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при передаче пустого username (Negative)")
+    @DisplayName("Ошибка авторизации при передаче пустого username")
     public void loginWithBlankUsernameTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -74,7 +75,7 @@ public class TestAuthToken extends TestBase {
 }
 
     @Test
-    @DisplayName("Проверка чувствительности к регистру в username (Case Sensitivity)")
+    @DisplayName("Проверка чувствительности к регистру в username")
     public void loginCaseSensitivityTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -99,7 +100,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Успешная авторизация с пробелами в username (Whitespace Trimming)")
+    @DisplayName("Успешная авторизация с пробелами в username")
     public void loginWhitespaceTrimmingTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -127,7 +128,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при передаче пустого password (Negative)")
+    @DisplayName("Ошибка авторизации при передаче пустого password")
     public void loginWithBlankPasswordTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -152,7 +153,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при вводе неверного пароля (Negative)")
+    @DisplayName("Ошибка авторизации при вводе неверного пароля")
     public void loginWithWrongPasswordTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -177,7 +178,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации для несуществующего в системе пользователя (Negative)")
+    @DisplayName("Ошибка авторизации для несуществующего в системе пользователя")
     public void loginWithNonExistentUserTest() {
         LoginBodyModel loginData = new LoginBodyModel(testData.username, testData.password);
 
@@ -193,7 +194,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при отправке пустого тела запроса (Negative)")
+    @DisplayName("Ошибка авторизации при отправке пустого тела запроса")
     public void loginWithEmptyBodyTest() {
         LoginErrorResponseModel errorResponse = given(loginRequestSpec)
                 .body("{}")
@@ -232,7 +233,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при передаче некорректных типов данных вместо строк (Negative)")
+    @DisplayName("Ошибка авторизации при передаче некорректных типов данных вместо строк")
     public void loginWithInvalidDataTypesTest() {
         LoginErrorResponseModel errorResponse = given(loginRequestSpec)
                 .body(TestData.invalidDataTypesJson)
@@ -247,7 +248,7 @@ public class TestAuthToken extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка авторизации при отправке синтаксически некорректного JSON (Negative)")
+    @DisplayName("Ошибка авторизации при отправке синтаксически некорректного JSON")
     public void loginWithMalformedJsonTest() {
         String errorDetail = given(loginRequestSpec)
                 .body(testData.malformedJson)

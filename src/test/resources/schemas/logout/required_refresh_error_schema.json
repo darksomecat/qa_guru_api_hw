@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org",
+  "type": "object",
+  "properties": {
+    "refresh": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["refresh"],
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "firstName": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "lastName": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "email": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

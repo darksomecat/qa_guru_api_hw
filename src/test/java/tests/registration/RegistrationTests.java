@@ -15,7 +15,7 @@ import static specs.RegistrationSpec.*;
 public class RegistrationTests extends TestBase {
 
     @Test
-    @DisplayName("Успешная регистрация нового пользователя (Positive)")
+    @DisplayName("Успешная регистрация нового пользователя")
     public void successfulRegistrationResponseTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.password);
 
@@ -33,7 +33,7 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка регистрация: пользователь с таким именем уже существует (Negative)")
+    @DisplayName("Ошибка регистрация: пользователь с таким именем уже существует")
     public void successfulRegistration400AlreadyExistsTest() {
         String duplicateUser = testData.username;
         RegistrationBodyModel firstRegistrationData = new RegistrationBodyModel(duplicateUser, testData.password);
@@ -58,7 +58,7 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка регистрации при передаче пустого username (Negative)")
+    @DisplayName("Ошибка регистрации при передаче пустого username")
     public void registrationWithBlankUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel("", testData.password);
         RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
@@ -73,7 +73,7 @@ public class RegistrationTests extends TestBase {
         assertThat(errorResponse.username()).containsExactly("This field may not be blank.");
     }
     @Test
-    @DisplayName("Ошибка регистрации при передаче пустого password (Negative)")
+    @DisplayName("Ошибка регистрации при передаче пустого password")
     public void registrationWithBlankPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, "");
         RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
@@ -89,7 +89,7 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Ошибка регистрации при отправке пустого тела запроса (Negative)")
+    @DisplayName("Ошибка регистрации при отправке пустого тела запроса")
     public void registrationWithEmptyBodyTest() {
 
         RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
@@ -106,12 +106,10 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Проверка очистки пробелов в username при регистрации (Whitespace Trimming)")
+    @DisplayName("Проверка очистки пробелов в username при регистрации")
     public void registrationWhitespaceTrimmingTest() {
         String usernameWithSpaces = "   " + testData.username + "   ";
         RegistrationBodyModel data = new RegistrationBodyModel(usernameWithSpaces, testData.password);
-
-        // Выполняем запрос
         RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
                 .body(data)
                 .when()
@@ -127,9 +125,9 @@ public class RegistrationTests extends TestBase {
         assertThat(registrationResponse.remoteAddr()).isNotEmpty();
     }
     @Test
-    @DisplayName("Ошибка регистрации при превышении максимальной длины username в 150 символов (Negative Upper Boundary)")
+    @DisplayName("Ошибка регистрации при превышении максимальной длины username в 150 символов")
     public void registrationWithTooLongUsernameTest() {
-        RegistrationBodyModel data = new RegistrationBodyModel(TestData.tooLongUsername, testData.password);
+        RegistrationBodyModel data = new RegistrationBodyModel(TestData.tooLong151Symbols, testData.password);
         RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
                 .body(data)
                 .when()
@@ -143,7 +141,7 @@ public class RegistrationTests extends TestBase {
     @Test
     @DisplayName("Регистрация при максимальной длине username в 150 символов")
     public void registrationWithMaxUsernameTest() {
-        RegistrationBodyModel data = new RegistrationBodyModel(TestData.maxUsername, testData.password);
+        RegistrationBodyModel data = new RegistrationBodyModel(TestData.maxLeght150Symbols, testData.password);
         RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
                 .body(data)
                 .when()
@@ -157,7 +155,7 @@ public class RegistrationTests extends TestBase {
         assertThat(registrationResponse.remoteAddr()).isNotEmpty();
     }
     @Test
-    @DisplayName("Успешная регистрация нового пользователя (Positive)")
+    @DisplayName("Успешная регистрация нового пользователя")
     public void registrationWithMaxPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.maxPassword);
 
@@ -174,7 +172,7 @@ public class RegistrationTests extends TestBase {
         assertThat(registrationResponse.remoteAddr()).isNotEmpty();
     }
     @Test
-    @DisplayName("Ошибка регистрации при превышении максимальной длины password в 128 символов (Negative Upper Boundary)")
+    @DisplayName("Ошибка регистрации при превышении максимальной длины password в 128 символов")
     public void registrationWithTooLongPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.tooLongPassword);
         RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
@@ -187,4 +185,5 @@ public class RegistrationTests extends TestBase {
                 .as(RegistrationErrorResponseModel.class);
         assertThat(errorResponse.password()).containsExactly("Ensure this field has no more than 128 characters.");
     }
+
 }
