@@ -12,10 +12,13 @@ import tests.TestBase;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.LoginSpec.loginRequestSpec;
+import static specs.BaseSpec.withoutContentTypeRequestSpec;
+import static specs.BaseSpec.baseRequestSpec;
 import static specs.LoginSpec.successfulLoginResponseSpec;
-import static specs.LogoutSpec.*;
-import static specs.RegistrationSpec.registrationRequestSpec;
+import static specs.LogoutSpec.invalidTokenLogoutResponseSpec;
+import static specs.LogoutSpec.logoutWithoutContentTypeResponseSpec;
+import static specs.LogoutSpec.requiredRefreshLogoutResponseSpec;
+import static specs.LogoutSpec.successfulLogoutResponseSpec;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static tests.testData.TestData.*;
@@ -26,7 +29,7 @@ public class LogoutTests extends TestBase {
     public static void registerHardcodedUser() {
         RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
 
-        given(registrationRequestSpec)
+        given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -40,7 +43,7 @@ public class LogoutTests extends TestBase {
     public void successfulLogoutTest() {
         LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-        String refreshToken = given(loginRequestSpec)
+        String refreshToken = given(baseRequestSpec)
                 .body(loginData)
                 .when()
                 .post("/auth/token/")
@@ -50,13 +53,13 @@ public class LogoutTests extends TestBase {
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
 
-        given(logoutRequestSpec)
+        given(baseRequestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
                 .then()
                 .spec(successfulLogoutResponseSpec);
-        LogoutErrorResponseModel errorResponse = given(logoutRequestSpec)
+        LogoutErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
@@ -73,7 +76,7 @@ public class LogoutTests extends TestBase {
     public void logoutWithInvalidTokenTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel(INVALID_REFRESH_TOKEN);
 
-        LogoutErrorResponseModel errorResponse = given(logoutRequestSpec)
+        LogoutErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
@@ -87,7 +90,7 @@ public class LogoutTests extends TestBase {
     @Test
     @DisplayName("Ошибка logout при передаче пустого тела запроса")
     public void logoutWithEmptyBodyTest() {
-        LogoutRequiredFieldErrorResponseModel errorResponse = given(logoutRequestSpec)
+        LogoutRequiredFieldErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body("{}")
                 .when()
                 .post("/auth/logout/")
@@ -102,7 +105,7 @@ public class LogoutTests extends TestBase {
     public void logoutWithBlankRefreshTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel("");
 
-        LogoutRequiredFieldErrorResponseModel errorResponse = given(logoutRequestSpec)
+        LogoutRequiredFieldErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
@@ -117,7 +120,7 @@ public class LogoutTests extends TestBase {
     public void logoutWithoutContentTypeTest() {
         LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-        String refreshToken = given(loginRequestSpec)
+        String refreshToken = given(baseRequestSpec)
                 .body(loginData)
                 .when()
                 .post("/auth/token/")
@@ -127,7 +130,7 @@ public class LogoutTests extends TestBase {
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
 
-        String detail = given(logoutWithoutContentTypeRequestSpec)
+        String detail = given(withoutContentTypeRequestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")

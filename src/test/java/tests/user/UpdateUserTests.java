@@ -15,9 +15,8 @@ import tests.TestBase;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
-import static specs.LoginSpec.loginRequestSpec;
+import static specs.BaseSpec.baseRequestSpec;
 import static specs.LoginSpec.successfulLoginResponseSpec;
-import static specs.RegistrationSpec.registrationRequestSpec;
 import static specs.UserSpec.*;
 import static tests.testData.TestData.*;
 
@@ -29,7 +28,7 @@ public class UpdateUserTests extends TestBase {
     public void auth() {
         RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
 
-        given(registrationRequestSpec)
+        given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -40,7 +39,7 @@ public class UpdateUserTests extends TestBase {
 
         LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-        accessToken = given(loginRequestSpec)
+        accessToken = given(baseRequestSpec)
                 .body(loginData)
                 .when()
                 .post("/auth/token/")
@@ -59,7 +58,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserResponseModel response = given(updateUserRequestSpec)
+        UserResponseModel response = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -83,7 +82,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -110,7 +109,7 @@ public class UpdateUserTests extends TestBase {
                 maxLeght254Symbols
         );
 
-        UserResponseModel response = given(updateUserRequestSpec)
+        UserResponseModel response = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -134,7 +133,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -159,7 +158,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -184,7 +183,7 @@ public class UpdateUserTests extends TestBase {
                 tooLong255Symbols
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -210,7 +209,7 @@ public class UpdateUserTests extends TestBase {
                 maxLeght254Symbols
         );
 
-        UserResponseModel response = given(updateUserRequestSpec)
+        UserResponseModel response = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -234,7 +233,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserResponseModel response = given(updateUserRequestSpec)
+        UserResponseModel response = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -258,7 +257,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -284,7 +283,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -310,7 +309,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -335,7 +334,7 @@ public class UpdateUserTests extends TestBase {
                 tooLong255Symbols
         );
 
-        UserErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserErrorResponseModel errorResponse = given(baseRequestSpec)
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
@@ -360,7 +359,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserDetailErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserDetailErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(updateData)
                 .when()
                 .put("/users/me/")
@@ -381,7 +380,7 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserDetailErrorResponseModel errorResponse = given(updateUserRequestSpec)
+        UserDetailErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(updateData)
                 .when()
                 .patch("/users/me/")

@@ -10,6 +10,7 @@ import tests.testData.TestData;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static specs.BaseSpec.baseRequestSpec;
 import static specs.RegistrationSpec.*;
 
 public class RegistrationTests extends TestBase {
@@ -19,7 +20,7 @@ public class RegistrationTests extends TestBase {
     public void successfulRegistrationResponseTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.password);
 
-        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
+        RegistrationResponseModel registrationResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -37,7 +38,7 @@ public class RegistrationTests extends TestBase {
     public void successfulRegistration400AlreadyExistsTest() {
         String duplicateUser = testData.username;
         RegistrationBodyModel firstRegistrationData = new RegistrationBodyModel(duplicateUser, testData.password);
-        given(registrationRequestSpec)
+        given(baseRequestSpec)
                 .body(firstRegistrationData)
                 .when()
                 .post("/users/register/")
@@ -45,7 +46,7 @@ public class RegistrationTests extends TestBase {
                 .spec(successfulRegistrationResponseSpec);
 
         RegistrationBodyModel duplicateData = new RegistrationBodyModel(duplicateUser, testData.password);
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(duplicateData)
                 .when()
                 .post("/users/register/")
@@ -61,7 +62,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Ошибка регистрации при передаче пустого username")
     public void registrationWithBlankUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel("", testData.password);
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -76,7 +77,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Ошибка регистрации при передаче пустого password")
     public void registrationWithBlankPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, "");
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -92,7 +93,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Ошибка регистрации при отправке пустого тела запроса")
     public void registrationWithEmptyBodyTest() {
 
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body("{}")
                 .when()
                 .post("/users/register/")
@@ -110,7 +111,7 @@ public class RegistrationTests extends TestBase {
     public void registrationWhitespaceTrimmingTest() {
         String usernameWithSpaces = "   " + testData.username + "   ";
         RegistrationBodyModel data = new RegistrationBodyModel(usernameWithSpaces, testData.password);
-        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
+        RegistrationResponseModel registrationResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -128,7 +129,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Ошибка регистрации при превышении максимальной длины username в 150 символов")
     public void registrationWithTooLongUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(TestData.tooLong151Symbols, testData.password);
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -142,7 +143,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Регистрация при максимальной длине username в 150 символов")
     public void registrationWithMaxUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(TestData.maxLeght150Symbols, testData.password);
-        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
+        RegistrationResponseModel registrationResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -159,7 +160,7 @@ public class RegistrationTests extends TestBase {
     public void registrationWithMaxPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.maxPassword);
 
-        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
+        RegistrationResponseModel registrationResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
@@ -175,7 +176,7 @@ public class RegistrationTests extends TestBase {
     @DisplayName("Ошибка регистрации при превышении максимальной длины password в 128 символов")
     public void registrationWithTooLongPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.tooLongPassword);
-        RegistrationErrorResponseModel errorResponse = given(registrationRequestSpec)
+        RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
                 .post("/users/register/")
