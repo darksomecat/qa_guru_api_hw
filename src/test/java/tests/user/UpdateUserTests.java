@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import tests.TestBase;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
@@ -26,26 +27,28 @@ public class UpdateUserTests extends TestBase {
 
     @BeforeEach
     public void auth() {
-        RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
+        step("Регистрация тестового пользователя и получение access-токена", () -> {
+            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
 
-        given(baseRequestSpec)
-                .body(data)
-                .when()
-                .post("/users/register/")
-                .then()
-                .statusCode(anyOf(
-                        is(201),
-                        is(400) ));
+            given(baseRequestSpec)
+                    .body(data)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .statusCode(anyOf(
+                            is(201),
+                            is(400) ));
 
-        LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
+            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-        accessToken = given(baseRequestSpec)
-                .body(loginData)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().path("access");
+            accessToken = given(baseRequestSpec)
+                    .body(loginData)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("access");
+        });
     }
 
     @Test
@@ -58,19 +61,23 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserResponseModel response = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(successfulUpdateUserResponseSpec)
-                .extract().as(UserResponseModel.class);
+        UserResponseModel response = step("Обновление профиля пользователя методом PUT", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(successfulUpdateUserResponseSpec)
+                    .extract().as(UserResponseModel.class);
+        });
 
-        assertThat(response.username()).isEqualTo(USERNAMEHC);
-        assertThat(response.firstName()).isEqualTo(testData.updatedFirstName);
-        assertThat(response.lastName()).isEqualTo(testData.updatedLastName);
-        assertThat(response.email()).isEqualTo(testData.updatedEmail);
+        step("Проверка обновлённых данных профиля", () -> {
+            assertThat(response.username()).isEqualTo(USERNAMEHC);
+            assertThat(response.firstName()).isEqualTo(testData.updatedFirstName);
+            assertThat(response.lastName()).isEqualTo(testData.updatedLastName);
+            assertThat(response.email()).isEqualTo(testData.updatedEmail);
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля при недопустимом символе в username")
@@ -82,26 +89,29 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля с недопустимым символом в username #", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.username()).containsExactly(
-                "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.");
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о недопустимом username", () -> {
+            assertThat(errorResponse.username()).containsExactly(
+                    "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.");
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
 
     @Test
     @DisplayName("Успешное обновление профиля пользователя (PUT)")
     public void successfulUpdateUserMaxSymbolsTest() {
-
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 testData.maxLeght150Symbols,
                 testData.maxLeght150Symbols,
@@ -109,19 +119,23 @@ public class UpdateUserTests extends TestBase {
                 testData.maxLeght254Symbols
         );
 
-        UserResponseModel response = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(successfulUpdateUserResponseSpec)
-                .extract().as(UserResponseModel.class);
+        UserResponseModel response = step("Обновление профиля методом PUT с максимальной длиной полей", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(successfulUpdateUserResponseSpec)
+                    .extract().as(UserResponseModel.class);
+        });
 
-        assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+        step("Проверка обновлённых данных профиля", () -> {
+            assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля при превышении длины firstName")
@@ -133,20 +147,24 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля с firstName длиной 151 символ", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.firstName()).containsExactly(
-                "Ensure this field has no more than 150 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины firstName", () -> {
+            assertThat(errorResponse.firstName()).containsExactly(
+                    "Ensure this field has no more than 150 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля при превышении длины lastName")
@@ -158,20 +176,24 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля с lastName длиной 151 символ", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.lastName()).containsExactly(
-                "Ensure this field has no more than 150 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины lastName", () -> {
+            assertThat(errorResponse.lastName()).containsExactly(
+                    "Ensure this field has no more than 150 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля при превышении длины email")
@@ -183,25 +205,28 @@ public class UpdateUserTests extends TestBase {
                 testData.tooLong255Symbols
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля с email длиной 255 символов", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.email()).containsExactly(
-                "Ensure this field has no more than 254 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины email", () -> {
+            assertThat(errorResponse.email()).containsExactly(
+                    "Ensure this field has no more than 254 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+        });
     }
     @Test
     @DisplayName("Успешное обновление профиля пользователя (PATCH)")
     public void successfulUpdateUserPatchMaxSymbolsTest() {
-
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 testData.maxLeght150Symbols,
                 testData.maxLeght150Symbols,
@@ -209,19 +234,23 @@ public class UpdateUserTests extends TestBase {
                 testData.maxLeght254Symbols
         );
 
-        UserResponseModel response = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(successfulUpdateUserResponseSpec)
-                .extract().as(UserResponseModel.class);
+        UserResponseModel response = step("Обновление профиля методом PATCH с максимальной длиной полей", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(successfulUpdateUserResponseSpec)
+                    .extract().as(UserResponseModel.class);
+        });
 
-        assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
-        assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+        step("Проверка обновлённых данных профиля", () -> {
+            assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
+            assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+        });
     }
     @Test
     @DisplayName("Успешное обновление профиля пользователя (PATCH)")
@@ -233,19 +262,23 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserResponseModel response = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(successfulUpdateUserResponseSpec)
-                .extract().as(UserResponseModel.class);
+        UserResponseModel response = step("Обновление профиля пользователя методом PATCH", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(successfulUpdateUserResponseSpec)
+                    .extract().as(UserResponseModel.class);
+        });
 
-        assertThat(response.username()).isEqualTo(USERNAMEHC);
-        assertThat(response.firstName()).isEqualTo(testData.updatedFirstName);
-        assertThat(response.lastName()).isEqualTo(testData.updatedLastName);
-        assertThat(response.email()).isEqualTo(testData.updatedEmail);
+        step("Проверка обновлённых данных профиля", () -> {
+            assertThat(response.username()).isEqualTo(USERNAMEHC);
+            assertThat(response.firstName()).isEqualTo(testData.updatedFirstName);
+            assertThat(response.lastName()).isEqualTo(testData.updatedLastName);
+            assertThat(response.email()).isEqualTo(testData.updatedEmail);
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля (PATCH) при недопустимом символе в username")
@@ -257,20 +290,24 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с недопустимым символом в username", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.username()).containsExactly(
-                "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.");
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о недопустимом username", () -> {
+            assertThat(errorResponse.username()).containsExactly(
+                    "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.");
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
 
     @Test
@@ -283,20 +320,24 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с firstName длиной 151 символ", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.firstName()).containsExactly(
-                "Ensure this field has no more than 150 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины firstName", () -> {
+            assertThat(errorResponse.firstName()).containsExactly(
+                    "Ensure this field has no more than 150 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
 
     @Test
@@ -309,20 +350,24 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с lastName длиной 151 символ", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.lastName()).containsExactly(
-                "Ensure this field has no more than 150 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.email()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины lastName", () -> {
+            assertThat(errorResponse.lastName()).containsExactly(
+                    "Ensure this field has no more than 150 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.email()).isNull();
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля (PATCH) при превышении длины email")
@@ -334,20 +379,24 @@ public class UpdateUserTests extends TestBase {
                 testData.tooLong255Symbols
         );
 
-        UserErrorResponseModel errorResponse = given(baseRequestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(badRequestUserResponseSpec)
-                .extract().as(UserErrorResponseModel.class);
+        UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с email длиной 255 символов", () -> {
+            return given(baseRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(badRequestUserResponseSpec)
+                    .extract().as(UserErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.email()).containsExactly(
-                "Ensure this field has no more than 254 characters.");
-        assertThat(errorResponse.username()).isNull();
-        assertThat(errorResponse.firstName()).isNull();
-        assertThat(errorResponse.lastName()).isNull();
+        step("Проверка ответа (400) и сообщения о превышении длины email", () -> {
+            assertThat(errorResponse.email()).containsExactly(
+                    "Ensure this field has no more than 254 characters.");
+            assertThat(errorResponse.username()).isNull();
+            assertThat(errorResponse.firstName()).isNull();
+            assertThat(errorResponse.lastName()).isNull();
+        });
     }
     @Test
     @DisplayName("Ошибка обновления профиля без Authorization")
@@ -359,16 +408,19 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserDetailErrorResponseModel errorResponse = given(baseRequestSpec)
-                .body(updateData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(unauthorizedUserResponseSpec)
-                .extract().as(UserDetailErrorResponseModel.class);
+        UserDetailErrorResponseModel errorResponse = step("Обновление профиля методом PUT без Authorization", () -> {
+            return given(baseRequestSpec)
+                    .body(updateData)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(unauthorizedUserResponseSpec)
+                    .extract().as(UserDetailErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.detail())
-                .isEqualTo("Authentication credentials were not provided.");
+        step("Проверка ответа (401) и сообщения об отсутствии авторизации", () ->
+                assertThat(errorResponse.detail())
+                        .isEqualTo("Authentication credentials were not provided."));
     }
     @Test
     @DisplayName("Ошибка обновления профиля (PATCH) без Authorization")
@@ -380,16 +432,18 @@ public class UpdateUserTests extends TestBase {
                 testData.updatedEmail
         );
 
-        UserDetailErrorResponseModel errorResponse = given(baseRequestSpec)
-                .body(updateData)
-                .when()
-                .patch("/users/me/")
-                .then()
-                .spec(unauthorizedUserResponseSpec)
-                .extract().as(UserDetailErrorResponseModel.class);
+        UserDetailErrorResponseModel errorResponse = step("Обновление профиля методом PATCH без Authorization", () -> {
+            return given(baseRequestSpec)
+                    .body(updateData)
+                    .when()
+                    .patch("/users/me/")
+                    .then()
+                    .spec(unauthorizedUserResponseSpec)
+                    .extract().as(UserDetailErrorResponseModel.class);
+        });
 
-        assertThat(errorResponse.detail())
-                .isEqualTo("Authentication credentials were not provided.");
+        step("Проверка ответа (401) и сообщения об отсутствии авторизации", () ->
+                assertThat(errorResponse.detail())
+                        .isEqualTo("Authentication credentials were not provided."));
     }
 }
-
