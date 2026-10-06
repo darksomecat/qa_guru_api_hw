@@ -103,10 +103,10 @@ public class UpdateUserTests extends TestBase {
     public void successfulUpdateUserMaxSymbolsTest() {
 
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
-                maxLeght150Symbols,
-                maxLeght150Symbols,
-                maxLeght150Symbols,
-                maxLeght254Symbols
+                testData.maxLeght150Symbols,
+                testData.maxLeght150Symbols,
+                testData.maxLeght150Symbols,
+                testData.maxLeght254Symbols
         );
 
         UserResponseModel response = given(baseRequestSpec)
@@ -118,17 +118,17 @@ public class UpdateUserTests extends TestBase {
                 .spec(successfulUpdateUserResponseSpec)
                 .extract().as(UserResponseModel.class);
 
-        assertThat(response.username()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.firstName()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.lastName()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.email()).isEqualTo(maxLeght254Symbols);
+        assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
     }
     @Test
     @DisplayName("Ошибка обновления профиля при превышении длины firstName")
     public void updateUserWithTooLongFirstNameTest() {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 USERNAMEHC,
-                tooLong151Symbols,
+                testData.tooLong151Symbols,
                 testData.updatedLastName,
                 testData.updatedEmail
         );
@@ -154,7 +154,7 @@ public class UpdateUserTests extends TestBase {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 USERNAMEHC,
                 testData.updatedFirstName,
-                tooLong151Symbols,
+                testData.tooLong151Symbols,
                 testData.updatedEmail
         );
 
@@ -180,7 +180,7 @@ public class UpdateUserTests extends TestBase {
                 USERNAMEHC,
                 testData.updatedFirstName,
                 testData.updatedLastName,
-                tooLong255Symbols
+                testData.tooLong255Symbols
         );
 
         UserErrorResponseModel errorResponse = given(baseRequestSpec)
@@ -203,10 +203,10 @@ public class UpdateUserTests extends TestBase {
     public void successfulUpdateUserPatchMaxSymbolsTest() {
 
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
-                maxLeght150Symbols,
-                maxLeght150Symbols,
-                maxLeght150Symbols,
-                maxLeght254Symbols
+                testData.maxLeght150Symbols,
+                testData.maxLeght150Symbols,
+                testData.maxLeght150Symbols,
+                testData.maxLeght254Symbols
         );
 
         UserResponseModel response = given(baseRequestSpec)
@@ -218,10 +218,10 @@ public class UpdateUserTests extends TestBase {
                 .spec(successfulUpdateUserResponseSpec)
                 .extract().as(UserResponseModel.class);
 
-        assertThat(response.username()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.firstName()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.lastName()).isEqualTo(maxLeght150Symbols);
-        assertThat(response.email()).isEqualTo(maxLeght254Symbols);
+        assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
+        assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
     }
     @Test
     @DisplayName("Успешное обновление профиля пользователя (PATCH)")
@@ -278,7 +278,7 @@ public class UpdateUserTests extends TestBase {
     public void patchUserWithTooLongFirstNameTest() {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 USERNAMEHC,
-                tooLong151Symbols,
+                testData.tooLong151Symbols,
                 testData.updatedLastName,
                 testData.updatedEmail
         );
@@ -305,7 +305,7 @@ public class UpdateUserTests extends TestBase {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
                 USERNAMEHC,
                 testData.updatedFirstName,
-                tooLong151Symbols,
+                testData.tooLong151Symbols,
                 testData.updatedEmail
         );
 
@@ -331,7 +331,7 @@ public class UpdateUserTests extends TestBase {
                 USERNAMEHC,
                 testData.updatedFirstName,
                 testData.updatedLastName,
-                tooLong255Symbols
+                testData.tooLong255Symbols
         );
 
         UserErrorResponseModel errorResponse = given(baseRequestSpec)

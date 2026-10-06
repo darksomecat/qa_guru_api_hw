@@ -6,7 +6,6 @@ import models.registration.RegistrationResponseModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
-import tests.testData.TestData;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,7 +127,7 @@ public class RegistrationTests extends TestBase {
     @Test
     @DisplayName("Ошибка регистрации при превышении максимальной длины username в 150 символов")
     public void registrationWithTooLongUsernameTest() {
-        RegistrationBodyModel data = new RegistrationBodyModel(TestData.tooLong151Symbols, testData.password);
+        RegistrationBodyModel data = new RegistrationBodyModel(testData.tooLong151Symbols, testData.password);
         RegistrationErrorResponseModel errorResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
@@ -142,7 +141,7 @@ public class RegistrationTests extends TestBase {
     @Test
     @DisplayName("Регистрация при максимальной длине username в 150 символов")
     public void registrationWithMaxUsernameTest() {
-        RegistrationBodyModel data = new RegistrationBodyModel(TestData.maxLeght150Symbols, testData.password);
+        RegistrationBodyModel data = new RegistrationBodyModel(testData.maxLeght150Symbols, testData.password);
         RegistrationResponseModel registrationResponse = given(baseRequestSpec)
                 .body(data)
                 .when()
