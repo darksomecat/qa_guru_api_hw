@@ -199,7 +199,7 @@ public class UpdateUserTests extends TestBase {
         assertThat(errorResponse.lastName()).isNull();
     }
     @Test
-    @DisplayName("Успешное обновление профиля пользователя (PUT)")
+    @DisplayName("Успешное обновление профиля пользователя (PATCH)")
     public void successfulUpdateUserPatchMaxSymbolsTest() {
 
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
@@ -213,7 +213,7 @@ public class UpdateUserTests extends TestBase {
                 .header("Authorization", "Bearer " + accessToken)
                 .body(updateData)
                 .when()
-                .put("/users/me/")
+                .patch("/users/me/")
                 .then()
                 .spec(successfulUpdateUserResponseSpec)
                 .extract().as(UserResponseModel.class);
