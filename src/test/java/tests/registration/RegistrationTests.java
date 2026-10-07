@@ -1,5 +1,4 @@
 package tests.registration;
-
 import models.registration.RegistrationBodyModel;
 import models.registration.RegistrationErrorResponseModel;
 import models.registration.RegistrationResponseModel;
@@ -7,11 +6,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
 
+
+
+
+import static api.RegistrationApiClient.register;
+import static api.RegistrationApiClient.registerWithError;
+import static api.RegistrationApiClient.registerWithEmptyBodyError;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
+import static specs.RegistrationSpec.successfulRegistrationResponseSpec;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.BaseSpec.baseRequestSpec;
-import static specs.RegistrationSpec.*;
 
 public class RegistrationTests extends TestBase {
 
@@ -20,16 +23,10 @@ public class RegistrationTests extends TestBase {
     public void successfulRegistrationResponseTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.password);
 
-        RegistrationResponseModel registrationResponse = step("Регистрация нового пользователя", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationResponseModel.class);
-        });
+        RegistrationResponseModel registrationResponse = step("Регистрация нового пользователя", () ->
+                register(data)
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract().as(RegistrationResponseModel.class));
 
         step("Проверка данных зарегистрированного пользователя", () -> {
             assertThat(registrationResponse.username()).isEqualTo(data.username());
@@ -43,25 +40,12 @@ public class RegistrationTests extends TestBase {
     public void successfulRegistration400AlreadyExistsTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
-        step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec);
-        });
+        step("Регистрация нового пользователя", () ->
+                register(registrationData)
+                        .spec(successfulRegistrationResponseSpec));
 
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса с уже существующим username", () -> {
-            return given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса с уже существующим username", () ->
+                registerWithError(registrationData));
 
         step("Проверка ответа (400) и сообщения о существующем пользователе", () ->
                 assertThat(errorResponse.username()).containsExactly("A user with that username already exists."));
@@ -72,16 +56,8 @@ public class RegistrationTests extends TestBase {
     public void registrationWithBlankUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel("", testData.password);
 
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым username", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым username", () ->
+                registerWithError(data));
 
         step("Проверка ответа (400) и сообщения о пустом username", () ->
                 assertThat(errorResponse.username()).containsExactly("This field may not be blank."));
@@ -91,16 +67,8 @@ public class RegistrationTests extends TestBase {
     public void registrationWithBlankPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, "");
 
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым password", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым password", () ->
+                registerWithError(data));
 
         step("Проверка ответа (400) и сообщения о пустом password", () ->
                 assertThat(errorResponse.password()).containsExactly("This field may not be blank."));
@@ -109,16 +77,8 @@ public class RegistrationTests extends TestBase {
     @Test
     @DisplayName("Ошибка регистрации при отправке пустого тела запроса")
     public void registrationWithEmptyBodyTest() {
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым телом", () -> {
-            return given(baseRequestSpec)
-                    .body("{}")
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с пустым телом", () ->
+                registerWithEmptyBodyError());
 
         step("Проверка ответа (400) и сообщений об обязательных полях", () -> {
             assertThat(errorResponse.username()).containsExactly("This field is required.");
@@ -132,16 +92,10 @@ public class RegistrationTests extends TestBase {
         String usernameWithSpaces = "   " + testData.username + "   ";
         RegistrationBodyModel data = new RegistrationBodyModel(usernameWithSpaces, testData.password);
 
-        RegistrationResponseModel registrationResponse = step("Регистрация с пробелами в username", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationResponseModel.class);
-        });
+        RegistrationResponseModel registrationResponse = step("Регистрация с пробелами в username", () ->
+                register(data)
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract().as(RegistrationResponseModel.class));
 
         step("Проверка очистки пробелов и данных пользователя", () -> {
             assertThat(registrationResponse.username()).isEqualTo(testData.username);
@@ -154,16 +108,8 @@ public class RegistrationTests extends TestBase {
     public void registrationWithTooLongUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.tooLong151Symbols, testData.password);
 
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с username длиной 151 символ", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec) // Проверяет код 400 и JSON-схему
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с username длиной 151 символ", () ->
+                registerWithError(data));
 
         step("Проверка ответа (400) и сообщения о превышении длины username", () ->
                 assertThat(errorResponse.username()).containsExactly("Ensure this field has no more than 150 characters."));
@@ -173,16 +119,10 @@ public class RegistrationTests extends TestBase {
     public void registrationWithMaxUsernameTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.maxLeght150Symbols, testData.password);
 
-        RegistrationResponseModel registrationResponse = step("Регистрация с username длиной 150 символов", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationResponseModel.class);
-        });
+        RegistrationResponseModel registrationResponse = step("Регистрация с username длиной 150 символов", () ->
+                register(data)
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract().as(RegistrationResponseModel.class));
 
         step("Проверка данных зарегистрированного пользователя", () -> {
             assertThat(registrationResponse.username()).isEqualTo(data.username());
@@ -195,16 +135,10 @@ public class RegistrationTests extends TestBase {
     public void registrationWithMaxPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.maxPassword);
 
-        RegistrationResponseModel registrationResponse = step("Регистрация с password длиной 128 символов", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationResponseModel.class);
-        });
+        RegistrationResponseModel registrationResponse = step("Регистрация с password длиной 128 символов", () ->
+                register(data)
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract().as(RegistrationResponseModel.class));
 
         step("Проверка данных зарегистрированного пользователя", () -> {
             assertThat(registrationResponse.username()).isEqualTo(data.username());
@@ -217,16 +151,8 @@ public class RegistrationTests extends TestBase {
     public void registrationWithTooLongPasswordTest() {
         RegistrationBodyModel data = new RegistrationBodyModel(testData.username, testData.tooLongPassword);
 
-        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с password длиной 129 символов", () -> {
-            return given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(badRequestRegistrationResponseSpec)
-                    .extract()
-                    .as(RegistrationErrorResponseModel.class);
-        });
+        RegistrationErrorResponseModel errorResponse = step("Отправка запроса регистрации с password длиной 129 символов", () ->
+                registerWithError(data));
 
         step("Проверка ответа (400) и сообщения о превышении длины password", () ->
                 assertThat(errorResponse.password()).containsExactly("Ensure this field has no more than 128 characters."));

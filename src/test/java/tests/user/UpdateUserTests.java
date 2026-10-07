@@ -1,5 +1,4 @@
 package tests.user;
-
 import models.login.LoginBodyModel;
 import models.registration.RegistrationBodyModel;
 import models.user.UpdateUserBodyModel;
@@ -11,12 +10,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import tests.TestBase;
-
-import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
+import static api.LoginApiClient.login;
+import static api.UserApiClient.patchUser;
+import static api.UserApiClient.patchUserWithoutAuth;
+import static api.UserApiClient.updateUser;
+import static api.UserApiClient.updateUserWithoutAuth;
+import static api.RegistrationApiClient.register;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
-import static specs.BaseSpec.baseRequestSpec;
+import static io.qameta.allure.Allure.step;
 import static specs.LoginSpec.successfulLoginResponseSpec;
 import static specs.UserSpec.*;
 import static tests.testData.TestData.*;
@@ -30,22 +32,14 @@ public class UpdateUserTests extends TestBase {
         step("Регистрация тестового пользователя и получение access-токена", () -> {
             RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
 
-            given(baseRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(data)
                     .statusCode(anyOf(
                             is(201),
                             is(400) ));
 
             LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-            accessToken = given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            accessToken = login(loginData)
                     .spec(successfulLoginResponseSpec)
                     .extract().path("access");
         });
@@ -62,12 +56,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserResponseModel response = step("Обновление профиля пользователя методом PUT", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(successfulUpdateUserResponseSpec)
                     .extract().as(UserResponseModel.class);
         });
@@ -90,12 +79,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля с недопустимым символом в username #", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -120,12 +104,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserResponseModel response = step("Обновление профиля методом PUT с максимальной длиной полей", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(successfulUpdateUserResponseSpec)
                     .extract().as(UserResponseModel.class);
         });
@@ -148,12 +127,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля с firstName длиной 151 символ", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -177,12 +151,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля с lastName длиной 151 символ", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -206,12 +175,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля с email длиной 255 символов", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -235,12 +199,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserResponseModel response = step("Обновление профиля методом PATCH с максимальной длиной полей", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(successfulUpdateUserResponseSpec)
                     .extract().as(UserResponseModel.class);
         });
@@ -263,12 +222,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserResponseModel response = step("Обновление профиля пользователя методом PATCH", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(successfulUpdateUserResponseSpec)
                     .extract().as(UserResponseModel.class);
         });
@@ -291,12 +245,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с недопустимым символом в username", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -321,12 +270,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с firstName длиной 151 символ", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -351,12 +295,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с lastName длиной 151 символ", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -380,12 +319,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserErrorResponseModel errorResponse = step("Обновление профиля методом PATCH с email длиной 255 символов", () -> {
-            return given(baseRequestSpec)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUser(updateData, accessToken)
                     .spec(badRequestUserResponseSpec)
                     .extract().as(UserErrorResponseModel.class);
         });
@@ -409,11 +343,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserDetailErrorResponseModel errorResponse = step("Обновление профиля методом PUT без Authorization", () -> {
-            return given(baseRequestSpec)
-                    .body(updateData)
-                    .when()
-                    .put("/users/me/")
-                    .then()
+            return updateUserWithoutAuth(updateData)
                     .spec(unauthorizedUserResponseSpec)
                     .extract().as(UserDetailErrorResponseModel.class);
         });
@@ -433,11 +363,7 @@ public class UpdateUserTests extends TestBase {
         );
 
         UserDetailErrorResponseModel errorResponse = step("Обновление профиля методом PATCH без Authorization", () -> {
-            return given(baseRequestSpec)
-                    .body(updateData)
-                    .when()
-                    .patch("/users/me/")
-                    .then()
+            return patchUserWithoutAuth(updateData)
                     .spec(unauthorizedUserResponseSpec)
                     .extract().as(UserDetailErrorResponseModel.class);
         });

@@ -1,5 +1,4 @@
 package tests.logout;
-
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
 import models.logout.LogoutErrorResponseModel;
@@ -9,19 +8,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
-
-import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static specs.BaseSpec.withoutContentTypeRequestSpec;
-import static specs.BaseSpec.baseRequestSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
-import static specs.LogoutSpec.invalidTokenLogoutResponseSpec;
-import static specs.LogoutSpec.logoutWithoutContentTypeResponseSpec;
-import static specs.LogoutSpec.requiredRefreshLogoutResponseSpec;
-import static specs.LogoutSpec.successfulLogoutResponseSpec;
+import static api.LoginApiClient.loginAndGetRefreshToken;
+import static api.LogoutApiClient.logout;
+import static api.LogoutApiClient.logoutWithToken;
+import static api.LogoutApiClient.logoutWithEmptyBody;
+import static api.LogoutApiClient.logoutWithoutContentType;
+import static api.RegistrationApiClient.register;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
+import static io.qameta.allure.Allure.step;
+import static org.assertj.core.api.Assertions.assertThat;
+import static specs.LogoutSpec.invalidTokenLogoutResponseSpec;
+import static specs.LogoutSpec.requiredRefreshLogoutResponseSpec;
 import static tests.testData.TestData.*;
 
 public class LogoutTests extends TestBase {
@@ -29,11 +27,7 @@ public class LogoutTests extends TestBase {
     public static void registerHardcodedUser() {
         RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
 
-        given(baseRequestSpec)
-                .body(data)
-                .when()
-                .post("/users/register/")
-                .then()
+        register(data)
                 .statusCode(anyOf(
                         is(201),
                         is(400) ));
@@ -42,34 +36,16 @@ public class LogoutTests extends TestBase {
     @DisplayName("Успешный logout с валидным refresh токеном")
     public void successfulLogoutTest() {
         LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-        String refreshToken = step("Авторизация и получение токена", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("refresh");
-        });
+        String refreshToken = step("Авторизация и получение токена", () ->
+                loginAndGetRefreshToken(loginData));
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
 
-        step("Отправка запроса logout c refresh- токеном и проверка ответа (200)", () -> {
-            given(baseRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(successfulLogoutResponseSpec);
-
-        });
+        step("Отправка запроса logout c refresh- токеном и проверка ответа (200)", () ->
+                logout(logoutData));
 
         step("Проверка добавления токена в blacklisted", () -> {
-            LogoutErrorResponseModel errorResponse = given(baseRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
+            LogoutErrorResponseModel errorResponse = logoutWithToken(logoutData)
                     .spec(invalidTokenLogoutResponseSpec)
                     .extract().as(LogoutErrorResponseModel.class);
 
@@ -83,15 +59,10 @@ public class LogoutTests extends TestBase {
     public void logoutWithInvalidTokenTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel(INVALID_REFRESH_TOKEN);
 
-        LogoutErrorResponseModel errorResponse = step("Отправка запроса logout с некорректным refresh-токеном", () -> {
-            return given(baseRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(invalidTokenLogoutResponseSpec)
-                    .extract().as(LogoutErrorResponseModel.class);
-        });
+        LogoutErrorResponseModel errorResponse = step("Отправка запроса logout с некорректным refresh-токеном", () ->
+                logoutWithToken(logoutData)
+                        .spec(invalidTokenLogoutResponseSpec)
+                        .extract().as(LogoutErrorResponseModel.class));
 
         step("Проверка ответа (401) и деталей ошибки", () -> {
             assertThat(errorResponse.detail()).isEqualTo("Token is invalid");
@@ -101,15 +72,10 @@ public class LogoutTests extends TestBase {
     @Test
     @DisplayName("Ошибка logout при передаче пустого тела запроса")
     public void logoutWithEmptyBodyTest() {
-        LogoutRequiredFieldErrorResponseModel errorResponse = step("Отправка запроса logout с пустым телом", () -> {
-            return given(baseRequestSpec)
-                    .body("{}")
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(requiredRefreshLogoutResponseSpec)
-                    .extract().as(LogoutRequiredFieldErrorResponseModel.class);
-        });
+        LogoutRequiredFieldErrorResponseModel errorResponse = step("Отправка запроса logout с пустым телом", () ->
+                logoutWithEmptyBody()
+                        .spec(requiredRefreshLogoutResponseSpec)
+                        .extract().as(LogoutRequiredFieldErrorResponseModel.class));
 
         step("Проверка ответа (400) и сообщения об обязательном поле refresh", () ->
                 assertThat(errorResponse.refresh()).containsExactly("This field is required."));
@@ -119,15 +85,10 @@ public class LogoutTests extends TestBase {
     public void logoutWithBlankRefreshTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel("");
 
-        LogoutRequiredFieldErrorResponseModel errorResponse = step("Отправка запроса logout с пустым refresh", () -> {
-            return given(baseRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(requiredRefreshLogoutResponseSpec)
-                    .extract().as(LogoutRequiredFieldErrorResponseModel.class);
-        });
+        LogoutRequiredFieldErrorResponseModel errorResponse = step("Отправка запроса logout с пустым refresh", () ->
+                logoutWithToken(logoutData)
+                        .spec(requiredRefreshLogoutResponseSpec)
+                        .extract().as(LogoutRequiredFieldErrorResponseModel.class));
 
         step("Проверка ответа (400) и сообщения о пустом поле refresh", () ->
                 assertThat(errorResponse.refresh()).containsExactly("This field may not be blank."));
@@ -137,27 +98,13 @@ public class LogoutTests extends TestBase {
     public void logoutWithoutContentTypeTest() {
         LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
 
-        String refreshToken = step("Авторизация и получение refresh-токена", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("refresh");
-        });
+        String refreshToken = step("Авторизация и получение refresh-токена", () ->
+                loginAndGetRefreshToken(loginData));
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
 
-        String detail = step("Отправка запроса logout без Content-Type", () -> {
-            return given(withoutContentTypeRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(logoutWithoutContentTypeResponseSpec)
-                    .extract().path("detail");
-        });
+        String detail = step("Отправка запроса logout без Content-Type", () ->
+                logoutWithoutContentType(logoutData));
 
         step("Проверка ответа (415) и сообщения о неподдерживаемом ContentType", () ->
                 assertThat(detail).isEqualTo("Unsupported media type \"text/plain; charset=ISO-8859-1\" in request."));

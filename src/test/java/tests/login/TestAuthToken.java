@@ -1,5 +1,4 @@
 package tests.login;
-
 import models.login.LoginBodyModel;
 import models.login.LoginErrorResponseModel;
 import models.login.LoginResponseModel;
@@ -8,18 +7,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
 import tests.testData.TestData;
-
+import static api.LoginApiClient.login;
+import static api.LoginApiClient.loginWithInvalidDataTypes;
+import static api.LoginApiClient.loginWithEmptyBody;
+import static api.LoginApiClient.loginWithRawBody;
+import static api.LoginApiClient.loginWithoutContentType;
+import static api.RegistrationApiClient.register;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
+import static specs.RegistrationSpec.successfulRegistrationResponseSpec;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.BaseSpec.withoutContentTypeRequestSpec;
-import static specs.BaseSpec.baseRequestSpec;
 import static specs.LoginSpec.badRequestLoginResponseSpec;
 import static specs.LoginSpec.jsonParseErrorLoginResponseSpec;
 import static specs.LoginSpec.loginWithoutContentTypeResponseSpec;
 import static specs.LoginSpec.successfulLoginResponseSpec;
 import static specs.LoginSpec.unauthorizedLoginResponseSpec;
-import static specs.RegistrationSpec.successfulRegistrationResponseSpec;
 
 public class TestAuthToken extends TestBase {
 
@@ -29,22 +30,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel(testData.username, testData.password);
 
         LoginResponseModel loginResponse = step("Авторизация и получение токенов", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(successfulLoginResponseSpec)
                     .extract().as(LoginResponseModel.class);
         });
@@ -64,22 +57,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel("", testData.password);
 
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с пустым username", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(badRequestLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -94,22 +79,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel(testData.username.toUpperCase(), testData.password);
 
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с username в верхнем регистре", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(unauthorizedLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -124,11 +101,7 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
@@ -136,11 +109,7 @@ public class TestAuthToken extends TestBase {
         LoginBodyModel loginData = new LoginBodyModel(usernameWithSpaces, testData.password);
 
         LoginResponseModel loginResponse = step("Авторизация с пробелами в username", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(successfulLoginResponseSpec)
                     .extract().as(LoginResponseModel.class);
         });
@@ -159,22 +128,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel(testData.username, "");
 
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с пустым password", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(badRequestLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -189,22 +150,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel(testData.username, "wrong_" + testData.password);
 
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с неверным паролем", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(unauthorizedLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -219,11 +172,7 @@ public class TestAuthToken extends TestBase {
         LoginBodyModel loginData = new LoginBodyModel(testData.username, testData.password);
 
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации для несуществующего пользователя", () -> {
-            return given(baseRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return login(loginData)
                     .spec(unauthorizedLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -236,11 +185,7 @@ public class TestAuthToken extends TestBase {
     @DisplayName("Ошибка авторизации при отправке пустого тела запроса")
     public void loginWithEmptyBodyTest() {
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с пустым телом", () -> {
-            return given(baseRequestSpec)
-                    .body("{}")
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return loginWithEmptyBody()
                     .spec(badRequestLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -257,22 +202,14 @@ public class TestAuthToken extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(testData.username, testData.password);
 
         step("Регистрация нового пользователя", () -> {
-            given(baseRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
+            register(registrationData)
                     .spec(successfulRegistrationResponseSpec);
         });
 
         LoginBodyModel loginData = new LoginBodyModel(testData.username, testData.password);
 
         String responseBody = step("Отправка запроса авторизации без Content-Type", () -> {
-            return given(withoutContentTypeRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return loginWithoutContentType(loginData)
                     .spec(loginWithoutContentTypeResponseSpec)
                     .extract().path("detail");
         });
@@ -285,11 +222,7 @@ public class TestAuthToken extends TestBase {
     @DisplayName("Ошибка авторизации при передаче некорректных типов данных вместо строк")
     public void loginWithInvalidDataTypesTest() {
         LoginErrorResponseModel errorResponse = step("Отправка запроса авторизации с некорректными типами данных", () -> {
-            return given(baseRequestSpec)
-                    .body(TestData.invalidDataTypesJson)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return loginWithInvalidDataTypes(TestData.invalidDataTypesJson)
                     .spec(badRequestLoginResponseSpec)
                     .extract().as(LoginErrorResponseModel.class);
         });
@@ -304,11 +237,7 @@ public class TestAuthToken extends TestBase {
     @DisplayName("Ошибка авторизации при отправке синтаксически некорректного JSON")
     public void loginWithMalformedJsonTest() {
         String errorDetail = step("Отправка запроса авторизации с некорректным JSON", () -> {
-            return given(baseRequestSpec)
-                    .body(testData.malformedJson)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
+            return loginWithRawBody(testData.malformedJson)
                     .spec(jsonParseErrorLoginResponseSpec)
                     .extract().path("detail");
         });
