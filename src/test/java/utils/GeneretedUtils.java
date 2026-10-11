@@ -31,4 +31,13 @@ public class GeneretedUtils {
                     .replaceAll("[^0-9].*", "");
         }
 
+        public static void useCrlfLineEndings (String filePath) throws java.io.IOException {
+            String content = new String(java.nio.file.Files.readAllBytes(
+                    java.nio.file.Paths.get(filePath)), java.nio.charset.StandardCharsets.UTF_8);
+
+            java.nio.file.Files.write(java.nio.file.Paths.get(filePath),
+                    content.replace("\r\n", "\n").replace("\n", "\r\n")
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
   }
