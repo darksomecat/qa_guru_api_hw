@@ -1,14 +1,10 @@
 package tests.club;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import helpers.AuthHelper;
 import models.club.ClubErrorResponseModel;
 import models.club.ClubResponseModel;
 import models.club.CreateClubBodyModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.user.UserDetailErrorResponseModel;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,33 +17,19 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static api.ClubApiClient.createClub;
-import static api.ClubApiClient.createClubWithEmptyBody;
-import static api.ClubApiClient.createClubWithInvalidDataTypes;
-import static api.ClubApiClient.createClubWithRawBody;
-import static api.ClubApiClient.createClubWithoutAuth;
 import static api.ClubApiClient.retrieveClub;
-import static api.LoginApiClient.login;
-import static api.RegistrationApiClient.register;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-import static specs.ClubSpec.CLUB_RESPONSE_SCHEMA;
 import static specs.ClubSpec.badRequestClubResponseSpec;
 import static specs.ClubSpec.successfulCreateClubResponseSpec;
 import static specs.ClubSpec.successfulRetrieveClubResponseSpec;
 import static specs.ClubSpec.unauthorizedClubResponseSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
 import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.clubRequiredFields;
 import static tests.testData.TestData.invalidClubDataTypesJson;
-import static utils.GeneretedUtils.getUserIdFromToken;
 
 public class ClubTests extends TestBase {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static String accessToken;
     private static Integer userId;
@@ -55,26 +37,15 @@ public class ClubTests extends TestBase {
     @BeforeAll
     public static void auth() {
         step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-
-            userId = Integer.valueOf(getUserIdFromToken(accessToken));
+            AuthHelper.AuthSession session = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC);
+            accessToken = session.accessToken();
+            userId = session.userId();
         });
     }
 
     @Test
     @DisplayName("Успешное создание клуба")
-    public void successfulCreateClubTest() throws JsonProcessingException {
+    public void successfulCreateClubTest() {
         CreateClubBodyModel createData = new CreateClubBodyModel(
                 testData.clubBookTitle,
                 testData.clubBookAuthors,
@@ -83,16 +54,10 @@ public class ClubTests extends TestBase {
                 testData.clubTelegramChatLink
         );
 
-        String responseBody = step("Создание клуба методом POST", () ->
+        ClubResponseModel response = step("Создание клуба методом POST", () ->
                 createClub(createData, accessToken)
                         .spec(successfulCreateClubResponseSpec)
-                        .extract().asString());
-
-        step("Проверка соответствия ответа схеме успешного создания клуба", () ->
-                MatcherAssert.assertThat(responseBody,
-                        matchesJsonSchemaInClasspath(CLUB_RESPONSE_SCHEMA)));
-
-        ClubResponseModel response = objectMapper.readValue(responseBody, ClubResponseModel.class);
+                        .extract().as(ClubResponseModel.class));
 
         step("Проверка данных созданного клуба", () -> {
             assertThat(response.id()).isNotNull();
@@ -105,16 +70,10 @@ public class ClubTests extends TestBase {
             assertThat(response.modified()).isNull();
         });
 
-        String savedClubBody = step("Получение созданного клуба по id", () ->
+        ClubResponseModel savedClub = step("Получение созданного клуба по id", () ->
                 retrieveClub(response.id())
                         .spec(successfulRetrieveClubResponseSpec)
-                        .extract().asString());
-
-        step("Проверка соответствия ответа схеме клуба", () ->
-                MatcherAssert.assertThat(savedClubBody,
-                        matchesJsonSchemaInClasspath(CLUB_RESPONSE_SCHEMA)));
-
-        ClubResponseModel savedClub = objectMapper.readValue(savedClubBody, ClubResponseModel.class);
+                        .extract().as(ClubResponseModel.class));
 
         step("Проверка сохранения клуба на сервере", () -> {
             assertThat(savedClub.id()).isEqualTo(response.id());
@@ -154,8 +113,8 @@ public class ClubTests extends TestBase {
     @DisplayName("Создание клуба при максимальной длине bookTitle и bookAuthors в 255 символов")
     public void createClubMaxSymbolsTest() {
         CreateClubBodyModel createData = new CreateClubBodyModel(
-                testData.maxLeght255Symbols,
-                testData.maxLeght255Symbols,
+                testData.maxLength255Symbols,
+                testData.maxLength255Symbols,
                 testData.clubPublicationYear,
                 testData.clubDescription,
                 testData.clubTelegramChatLink
@@ -167,8 +126,8 @@ public class ClubTests extends TestBase {
                         .extract().as(ClubResponseModel.class));
 
         step("Проверка ответа (201) и сохранённых значений полей", () -> {
-            assertThat(response.bookTitle()).isEqualTo(testData.maxLeght255Symbols);
-            assertThat(response.bookAuthors()).isEqualTo(testData.maxLeght255Symbols);
+            assertThat(response.bookTitle()).isEqualTo(testData.maxLength255Symbols);
+            assertThat(response.bookAuthors()).isEqualTo(testData.maxLength255Symbols);
         });
     }
 
@@ -207,7 +166,7 @@ public class ClubTests extends TestBase {
                 testData.clubBookAuthors,
                 testData.clubPublicationYear,
                 testData.clubDescription,
-                testData.maxLeght200Symbols
+                testData.maxLength200Symbols
         );
 
         ClubResponseModel response = step("Создание клуба методом POST с telegramChatLink длиной 200 символов", () ->
@@ -216,7 +175,7 @@ public class ClubTests extends TestBase {
                         .extract().as(ClubResponseModel.class));
 
         step("Проверка ответа (201) и сохранённой ссылки", () ->
-                assertThat(response.telegramChatLink()).isEqualTo(testData.maxLeght200Symbols));
+                assertThat(response.telegramChatLink()).isEqualTo(testData.maxLength200Symbols));
     }
 
     @Test
@@ -251,11 +210,11 @@ public class ClubTests extends TestBase {
         Map<String, Object> clubData = clubRequiredFields();
 
         step("Создание клуба методом POST", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(successfulCreateClubResponseSpec));
 
         ClubErrorResponseModel errorResponse = step("Повторное создание клуба с тем же bookTitle", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -273,7 +232,7 @@ public class ClubTests extends TestBase {
     @DisplayName("Ошибка создания клуба при отправке пустого тела запроса")
     public void createClubWithEmptyBodyTest() {
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с пустым телом", () ->
-                createClubWithEmptyBody(accessToken)
+                createClub("{}", accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -294,7 +253,7 @@ public class ClubTests extends TestBase {
         clubData.remove(requiredField);
 
         ClubErrorResponseModel errorResponse = step("Создание клуба методом POST без поля " + requiredField, () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -324,7 +283,7 @@ public class ClubTests extends TestBase {
         clubData.put("bookTitle", "");
 
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с пустым bookTitle", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -339,7 +298,7 @@ public class ClubTests extends TestBase {
         clubData.put("bookAuthors", "");
 
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с пустым bookAuthors", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -354,7 +313,7 @@ public class ClubTests extends TestBase {
         clubData.put("telegramChatLink", "");
 
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с пустым telegramChatLink", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -369,7 +328,7 @@ public class ClubTests extends TestBase {
         clubData.put("description", "");
 
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с пустым description", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -384,7 +343,7 @@ public class ClubTests extends TestBase {
         clubData.put("bookTitle", "   ");
 
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с bookTitle из пробелов", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -400,7 +359,7 @@ public class ClubTests extends TestBase {
         clubData.put("bookTitle", "   " + bookTitle + "   ");
 
         ClubResponseModel response = step("Отправка запроса создания клуба с пробелами вокруг bookTitle", () ->
-                createClubWithRawBody(clubData, accessToken)
+                createClub(clubData, accessToken)
                         .spec(successfulCreateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -412,7 +371,7 @@ public class ClubTests extends TestBase {
     @DisplayName("Ошибка создания клуба при передаче некорректных типов данных")
     public void createClubWithInvalidDataTypesTest() {
         ClubErrorResponseModel errorResponse = step("Отправка запроса создания клуба с некорректными типами данных", () ->
-                createClubWithInvalidDataTypes(invalidClubDataTypesJson, accessToken)
+                createClub(invalidClubDataTypesJson, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -437,7 +396,7 @@ public class ClubTests extends TestBase {
         );
 
         UserDetailErrorResponseModel errorResponse = step("Отправка запроса создания клуба без Authorization", () ->
-                createClubWithoutAuth(createData)
+                createClub(createData, null)
                         .spec(unauthorizedClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 

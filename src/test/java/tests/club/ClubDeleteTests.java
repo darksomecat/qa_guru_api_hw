@@ -1,10 +1,9 @@
 package tests.club;
 
+import helpers.AuthHelper;
 import models.club.BookReviewResponseModel;
 import models.club.ClubResponseModel;
 import models.club.PaginatedClubListResponseModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.user.UserDetailErrorResponseModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,26 +11,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
 
-import static api.ClubApiClient.createClubReview;
-import static api.ClubApiClient.createClubWithRawBody;
+import static api.ClubApiClient.createClub;
 import static api.ClubApiClient.deleteClub;
-import static api.ClubApiClient.deleteClubWithoutAuth;
 import static api.ClubApiClient.getClubsBySearch;
 import static api.ClubApiClient.retrieveClub;
-import static api.ClubApiClient.retrieveClubReview;
-import static api.LoginApiClient.login;
-import static api.RegistrationApiClient.register;
+import static api.ReviewApiClient.createReview;
+import static api.ReviewApiClient.retrieveReview;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 import static specs.ClubSpec.forbiddenClubResponseSpec;
 import static specs.ClubSpec.notFoundClubResponseSpec;
 import static specs.ClubSpec.successfulDeleteClubResponseSpec;
 import static specs.ClubSpec.successfulGetClubsResponseSpec;
 import static specs.ClubSpec.successfulRetrieveClubResponseSpec;
 import static specs.ClubSpec.unauthorizedClubResponseSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
 import static tests.testData.TestData.AUTHENTICATION_MESSAGE;
 import static tests.testData.TestData.CLUB_NOT_FOUND_MESSAGE;
 import static tests.testData.TestData.NO_PERMISSION_MESSAGE;
@@ -51,35 +44,11 @@ public class ClubDeleteTests extends TestBase {
 
     @BeforeAll
     public static void auth() {
-        step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
+        step("Регистрация тестового пользователя и получение access-токена", () ->
+                accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-        });
-
-        step("Регистрация второго пользователя для проверки прав на удаление", () -> {
-            RegistrationBodyModel memberData = new RegistrationBodyModel(otherUserName(), PASSWORDHC);
-
-            register(memberData)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel memberLoginData = new LoginBodyModel(memberData.username(), PASSWORDHC);
-
-            memberAccessToken = login(memberLoginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-        });
+        step("Регистрация второго пользователя для проверки прав на удаление", () ->
+                memberAccessToken = AuthHelper.loginAs(otherUserName(), PASSWORDHC).accessToken());
     }
 
     @BeforeEach
@@ -87,7 +56,7 @@ public class ClubDeleteTests extends TestBase {
         step("Создание клуба для проверок удаления", () -> {
             clubBookTitle = searchableClubTitle();
 
-            clubId = createClubWithRawBody(newClubRequest(clubBookTitle), accessToken)
+            clubId = createClub(newClubRequest(clubBookTitle), accessToken)
                     .extract().as(ClubResponseModel.class).id();
         });
     }
@@ -140,7 +109,7 @@ public class ClubDeleteTests extends TestBase {
     @DisplayName("Удаление клуба вместе с его отзывами")
     public void deleteClubWithReviewsTest() {
         Integer reviewId = step("Добавление отзыва в клуб", () ->
-                createClubReview(clubReviewRequest(clubId), accessToken)
+                createReview(clubReviewRequest(clubId), accessToken)
                         .extract().as(BookReviewResponseModel.class).id());
 
         ClubResponseModel clubWithReview = step("Получение клуба с отзывом", () ->
@@ -156,7 +125,7 @@ public class ClubDeleteTests extends TestBase {
                         .spec(successfulDeleteClubResponseSpec));
 
         UserDetailErrorResponseModel errorResponse = step("Получение отзыва удалённого клуба", () ->
-                retrieveClubReview(reviewId)
+                retrieveReview(reviewId)
                         .spec(notFoundClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 
@@ -188,7 +157,7 @@ public class ClubDeleteTests extends TestBase {
     @DisplayName("Ошибка удаления клуба без Authorization")
     public void deleteClubWithoutAuthTest() {
         UserDetailErrorResponseModel errorResponse = step("Удаление клуба методом DELETE без Authorization", () ->
-                deleteClubWithoutAuth(clubId)
+                deleteClub(clubId, null)
                         .spec(unauthorizedClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 

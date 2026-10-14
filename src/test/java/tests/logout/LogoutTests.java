@@ -1,21 +1,20 @@
 package tests.logout;
+
+import helpers.AuthHelper;
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
 import models.logout.LogoutErrorResponseModel;
 import models.logout.LogoutRequiredFieldErrorResponseModel;
-import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
+
 import static api.LoginApiClient.loginAndGetRefreshToken;
 import static api.LogoutApiClient.logout;
-import static api.LogoutApiClient.logoutWithToken;
 import static api.LogoutApiClient.logoutWithEmptyBody;
+import static api.LogoutApiClient.logoutWithToken;
 import static api.LogoutApiClient.logoutWithoutContentType;
-import static api.RegistrationApiClient.register;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.LogoutSpec.invalidTokenLogoutResponseSpec;
@@ -23,14 +22,10 @@ import static specs.LogoutSpec.requiredRefreshLogoutResponseSpec;
 import static tests.testData.TestData.*;
 
 public class LogoutTests extends TestBase {
+
     @BeforeAll
     public static void registerHardcodedUser() {
-        RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-        register(data)
-                .statusCode(anyOf(
-                        is(201),
-                        is(400) ));
+        AuthHelper.ensureUserExists(USERNAMEHC, PASSWORDHC);
     }
     @Test
     @DisplayName("Успешный logout с валидным refresh токеном")

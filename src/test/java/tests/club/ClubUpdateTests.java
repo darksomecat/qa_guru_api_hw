@@ -1,10 +1,9 @@
 package tests.club;
 
+import helpers.AuthHelper;
 import models.club.ClubErrorResponseModel;
 import models.club.ClubResponseModel;
 import models.club.UpdateClubBodyModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.user.UserDetailErrorResponseModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,24 +15,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static api.ClubApiClient.createClubWithRawBody;
+import static api.ClubApiClient.createClub;
 import static api.ClubApiClient.retrieveClub;
 import static api.ClubApiClient.updateClub;
-import static api.ClubApiClient.updateClubWithRawBody;
-import static api.ClubApiClient.updateClubWithoutAuth;
-import static api.LoginApiClient.login;
-import static api.RegistrationApiClient.register;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 import static specs.ClubSpec.badRequestClubResponseSpec;
 import static specs.ClubSpec.forbiddenClubResponseSpec;
 import static specs.ClubSpec.notFoundClubResponseSpec;
 import static specs.ClubSpec.successfulRetrieveClubResponseSpec;
 import static specs.ClubSpec.successfulUpdateClubResponseSpec;
 import static specs.ClubSpec.unauthorizedClubResponseSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
 import static tests.testData.TestData.AUTHENTICATION_MESSAGE;
 import static tests.testData.TestData.CLUB_NOT_FOUND_MESSAGE;
 import static tests.testData.TestData.NO_PERMISSION_MESSAGE;
@@ -43,9 +35,8 @@ import static tests.testData.TestData.newClubRequest;
 import static tests.testData.TestData.otherUserName;
 import static tests.testData.TestData.searchableClubTitle;
 import static tests.testData.TestData.updatedClubFields;
-import static utils.GeneretedUtils.getRandomHex;
-import static utils.GeneretedUtils.getRandomString;
-import static utils.GeneretedUtils.getUserIdFromToken;
+import static utils.GeneratedUtils.getRandomHex;
+import static utils.GeneratedUtils.getRandomString;
 
 public class ClubUpdateTests extends TestBase {
 
@@ -56,43 +47,20 @@ public class ClubUpdateTests extends TestBase {
 
     @BeforeAll
     public static void auth() {
-        step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-        });
+        step("Регистрация тестового пользователя и получение access-токена", () ->
+                accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
         step("Регистрация второго пользователя без прав на клуб", () -> {
-            RegistrationBodyModel otherData = new RegistrationBodyModel(otherUserName(), PASSWORDHC);
-
-            register(otherData)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel otherLoginData = new LoginBodyModel(otherData.username(), PASSWORDHC);
-
-            otherAccessToken = login(otherLoginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-
-            otherUserId = Integer.valueOf(getUserIdFromToken(otherAccessToken));
+            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(otherUserName(), PASSWORDHC);
+            otherAccessToken = otherSession.accessToken();
+            otherUserId = otherSession.userId();
         });
     }
 
     @BeforeEach
     public void createTestClub() {
         step("Создание клуба для проверок обновления", () ->
-                clubId = createClubWithRawBody(newClubRequest(searchableClubTitle()), accessToken)
+                clubId = createClub(newClubRequest(searchableClubTitle()), accessToken)
                         .extract().as(ClubResponseModel.class).id());
     }
 
@@ -137,7 +105,7 @@ public class ClubUpdateTests extends TestBase {
                 getRandomString(255),
                 testData.clubPublicationYear,
                 testData.clubDescription,
-                testData.maxLeght200Symbols
+                testData.maxLength200Symbols
         );
 
         ClubResponseModel response = step("Обновление клуба методом PUT с максимальной длиной полей", () ->
@@ -158,7 +126,7 @@ public class ClubUpdateTests extends TestBase {
         updateData.remove("bookTitle");
 
         ClubErrorResponseModel errorResponse = step("Обновление клуба методом PUT без поля bookTitle", () ->
-                updateClubWithRawBody(clubId, updateData, accessToken)
+                updateClub(clubId, updateData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -181,7 +149,7 @@ public class ClubUpdateTests extends TestBase {
         updateData.put("reviews", List.of());
 
         ClubResponseModel response = step("Обновление клуба методом PUT с передачей read-only полей", () ->
-                updateClubWithRawBody(clubId, updateData, accessToken)
+                updateClub(clubId, updateData, accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -215,7 +183,7 @@ public class ClubUpdateTests extends TestBase {
         updateData.put("telegramChatLink", testData.tooLong201Symbols);
 
         ClubErrorResponseModel errorResponse = step("Обновление клуба методом PUT с превышением длины полей", () ->
-                updateClubWithRawBody(clubId, updateData, accessToken)
+                updateClub(clubId, updateData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -257,7 +225,7 @@ public class ClubUpdateTests extends TestBase {
         UpdateClubBodyModel updateData = updatedClub();
 
         UserDetailErrorResponseModel errorResponse = step("Обновление клуба методом PUT без Authorization", () ->
-                updateClubWithoutAuth(clubId, updateData)
+                updateClub(clubId, updateData, null)
                         .spec(unauthorizedClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 

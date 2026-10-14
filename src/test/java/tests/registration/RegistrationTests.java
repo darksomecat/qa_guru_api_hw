@@ -117,7 +117,7 @@ public class RegistrationTests extends TestBase {
     @Test
     @DisplayName("Регистрация при максимальной длине username в 150 символов")
     public void registrationWithMaxUsernameTest() {
-        RegistrationBodyModel data = new RegistrationBodyModel(testData.maxLeght150Symbols, testData.password);
+        RegistrationBodyModel data = new RegistrationBodyModel(testData.maxLength150Symbols, testData.password);
 
         RegistrationResponseModel registrationResponse = step("Регистрация с username длиной 150 символов", () ->
                 register(data)

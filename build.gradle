@@ -34,7 +34,9 @@ dependencies {
             "io.qameta.allure:allure-rest-assured:$allureVersion",
             "org.assertj:assertj-core:3.27.7",
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
-            "org.slf4j:slf4j-simple:$slf4jVersion")
+            "org.slf4j:slf4j-simple:$slf4jVersion",
+            "com.codeborne:selenide:7.9.4",
+            "io.qameta.allure:allure-selenide:$allureVersion")
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
@@ -46,7 +48,6 @@ tasks.withType(JavaCompile).configureEach {
 tasks.withType(Test) {
     useJUnitPlatform()
     systemProperties(System.getProperties())
-    ignoreFailures = true
 
     testLogging {
         lifecycle {

@@ -1,6 +1,6 @@
 package tests.user;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
+
+import helpers.AuthHelper;
 import models.user.UpdateUserBodyModel;
 import models.user.UserDetailErrorResponseModel;
 import models.user.UserErrorResponseModel;
@@ -8,18 +8,14 @@ import models.user.UserResponseModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 import tests.TestBase;
-import static api.LoginApiClient.login;
+
 import static api.UserApiClient.patchUser;
 import static api.UserApiClient.patchUserWithoutAuth;
 import static api.UserApiClient.updateUser;
 import static api.UserApiClient.updateUserWithoutAuth;
-import static api.RegistrationApiClient.register;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 import static io.qameta.allure.Allure.step;
-import static specs.LoginSpec.successfulLoginResponseSpec;
+import static org.assertj.core.api.Assertions.assertThat;
 import static specs.UserSpec.*;
 import static tests.testData.TestData.*;
 
@@ -29,20 +25,8 @@ public class UpdateUserTests extends TestBase {
 
     @BeforeEach
     public void auth() {
-        step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-        });
+        step("Регистрация тестового пользователя и получение access-токена", () ->
+                accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
     }
 
     @Test
@@ -97,10 +81,10 @@ public class UpdateUserTests extends TestBase {
     @DisplayName("Успешное обновление профиля пользователя (PUT)")
     public void successfulUpdateUserMaxSymbolsTest() {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
-                testData.maxLeght150Symbols,
-                testData.maxLeght150Symbols,
-                testData.maxLeght150Symbols,
-                testData.maxLeght254Symbols
+                testData.maxLength150Symbols,
+                testData.maxLength150Symbols,
+                testData.maxLength150Symbols,
+                testData.maxLength254Symbols
         );
 
         UserResponseModel response = step("Обновление профиля методом PUT с максимальной длиной полей", () -> {
@@ -110,10 +94,10 @@ public class UpdateUserTests extends TestBase {
         });
 
         step("Проверка обновлённых данных профиля", () -> {
-            assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+            assertThat(response.username()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.firstName()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.lastName()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.email()).isEqualTo(testData.maxLength254Symbols);
         });
     }
     @Test
@@ -192,10 +176,10 @@ public class UpdateUserTests extends TestBase {
     @DisplayName("Успешное обновление профиля пользователя (PATCH)")
     public void successfulUpdateUserPatchMaxSymbolsTest() {
         UpdateUserBodyModel updateData = new UpdateUserBodyModel(
-                testData.maxLeght150Symbols,
-                testData.maxLeght150Symbols,
-                testData.maxLeght150Symbols,
-                testData.maxLeght254Symbols
+                testData.maxLength150Symbols,
+                testData.maxLength150Symbols,
+                testData.maxLength150Symbols,
+                testData.maxLength254Symbols
         );
 
         UserResponseModel response = step("Обновление профиля методом PATCH с максимальной длиной полей", () -> {
@@ -205,10 +189,10 @@ public class UpdateUserTests extends TestBase {
         });
 
         step("Проверка обновлённых данных профиля", () -> {
-            assertThat(response.username()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.firstName()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.lastName()).isEqualTo(testData.maxLeght150Symbols);
-            assertThat(response.email()).isEqualTo(testData.maxLeght254Symbols);
+            assertThat(response.username()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.firstName()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.lastName()).isEqualTo(testData.maxLength150Symbols);
+            assertThat(response.email()).isEqualTo(testData.maxLength254Symbols);
         });
     }
     @Test

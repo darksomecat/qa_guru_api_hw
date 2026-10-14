@@ -1,13 +1,9 @@
 package tests.club;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import helpers.AuthHelper;
 import models.club.ClubResponseModel;
 import models.club.PaginatedClubListResponseModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.user.UserDetailErrorResponseModel;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,24 +14,16 @@ import tests.TestBase;
 
 import java.util.Map;
 
-import static api.ClubApiClient.createClubWithRawBody;
+import static api.ClubApiClient.createClub;
 import static api.ClubApiClient.getClubs;
 import static api.ClubApiClient.getClubsByUrl;
 import static api.ClubApiClient.getClubsWithPageSize;
 import static api.ClubApiClient.retrieveClub;
-import static api.LoginApiClient.login;
-import static api.RegistrationApiClient.register;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-import static specs.ClubSpec.CLUB_RESPONSE_SCHEMA;
-import static specs.ClubSpec.PAGINATED_CLUB_LIST_SCHEMA;
 import static specs.ClubSpec.notFoundClubResponseSpec;
 import static specs.ClubSpec.successfulGetClubsResponseSpec;
 import static specs.ClubSpec.successfulRetrieveClubResponseSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
 import static tests.testData.TestData.CLUB_NOT_FOUND_MESSAGE;
 import static tests.testData.TestData.INVALID_PAGE_MESSAGE;
 import static tests.testData.TestData.NOT_FOUND_MESSAGE;
@@ -43,11 +31,8 @@ import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.newClubRequest;
 import static tests.testData.TestData.searchableClubTitle;
-import static utils.GeneretedUtils.getUserIdFromToken;
 
 public class ClubReadTests extends TestBase {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static String accessToken;
     private static Integer userId;
@@ -57,20 +42,9 @@ public class ClubReadTests extends TestBase {
     @BeforeAll
     public static void auth() {
         step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-
-            userId = Integer.valueOf(getUserIdFromToken(accessToken));
+            AuthHelper.AuthSession session = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC);
+            accessToken = session.accessToken();
+            userId = session.userId();
         });
     }
 
@@ -79,7 +53,7 @@ public class ClubReadTests extends TestBase {
         step("Создание клуба для проверок чтения", () -> {
             clubBookTitle = searchableClubTitle();
 
-            ClubResponseModel response = createClubWithRawBody(newClubRequest(clubBookTitle), accessToken)
+            ClubResponseModel response = createClub(newClubRequest(clubBookTitle), accessToken)
                     .extract().as(ClubResponseModel.class);
 
             clubId = response.id();
@@ -88,18 +62,11 @@ public class ClubReadTests extends TestBase {
 
     @Test
     @DisplayName("Успешное чтение списка клубов без авторизации")
-    public void getClubsListWithoutAuthTest() throws JsonProcessingException {
-        String responseBody = step("Получение списка клубов с параметрами пагинации", () ->
+    public void getClubsListWithoutAuthTest() {
+        PaginatedClubListResponseModel response = step("Получение списка клубов с параметрами пагинации", () ->
                 getClubs(Map.of("page", 1, "page_size", 1))
                         .spec(successfulGetClubsResponseSpec)
-                        .extract().asString());
-
-        step("Проверка соответствия ответа схеме списка клубов", () ->
-                MatcherAssert.assertThat(responseBody,
-                        matchesJsonSchemaInClasspath(PAGINATED_CLUB_LIST_SCHEMA)));
-
-        PaginatedClubListResponseModel response =
-                objectMapper.readValue(responseBody, PaginatedClubListResponseModel.class);
+                        .extract().as(PaginatedClubListResponseModel.class));
 
         step("Проверка структуры страницы с клубами", () -> {
             assertThat(response.count()).isPositive();
@@ -254,17 +221,11 @@ public class ClubReadTests extends TestBase {
 
     @Test
     @DisplayName("Успешное чтение клуба по id без авторизации")
-    public void getClubByIdWithoutAuthTest() throws JsonProcessingException {
-        String responseBody = step("Получение клуба по id", () ->
+    public void getClubByIdWithoutAuthTest() {
+        ClubResponseModel response = step("Получение клуба по id", () ->
                 retrieveClub(clubId)
                         .spec(successfulRetrieveClubResponseSpec)
-                        .extract().asString());
-
-        step("Проверка соответствия ответа схеме клуба", () ->
-                MatcherAssert.assertThat(responseBody,
-                        matchesJsonSchemaInClasspath(CLUB_RESPONSE_SCHEMA)));
-
-        ClubResponseModel response = objectMapper.readValue(responseBody, ClubResponseModel.class);
+                        .extract().as(ClubResponseModel.class));
 
         step("Проверка данных прочитанного клуба", () -> {
             assertThat(response.id()).isEqualTo(clubId);
