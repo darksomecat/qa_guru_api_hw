@@ -38,6 +38,10 @@ dependencies {
             "com.codeborne:selenide:7.9.4",
             "io.qameta.allure:allure-selenide:$allureVersion")
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    constraints {
+        ("org.seleniumhq.selenium:selenium-java:4.45.0")
+        ("org.seleniumhq.selenium:selenium-chrome-driver:4.45.0")
+    }
 
 }
 

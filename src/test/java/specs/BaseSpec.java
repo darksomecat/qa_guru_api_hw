@@ -8,7 +8,7 @@ import static io.restassured.http.ContentType.JSON;
 
 public class BaseSpec {
 
-    private static final String BASE_URI = System.getProperty("apiUrl");
+    private static final String BASE_URI = resolveBaseUri();
 
     public static RequestSpecification baseRequestSpec = with()
             .filter(withCustomTemplate())
@@ -22,4 +22,14 @@ public class BaseSpec {
             .log().all()
             .baseUri(BASE_URI)
             .basePath("/api/v1");
+
+    private static String resolveBaseUri() {
+        String apiUrl = System.getProperty("apiUrl");
+        if (apiUrl == null || apiUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "System property 'apiUrl' is not set. Pass -DapiUrl=https://... to Gradle/Jenkins."
+            );
+        }
+        return apiUrl;
+    }
 }
