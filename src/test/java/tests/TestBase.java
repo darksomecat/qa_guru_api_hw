@@ -36,11 +36,12 @@ public class TestBase {
         String browser = System.getProperty("browser");
         String browserSize = System.getProperty("browserSize");
         String baseUrl = System.getProperty("baseUrl");
+        String baseUrI = System.getProperty("baseUri");
         String browserVersion = System.getProperty("browserVersion");
         String headless = System.getProperty("headless");
 
         if (remote != null) Configuration.remote = remote;
-        if (browser != null) Configuration.browser = browser; // Защита от "Chrome" с большой буквы
+        if (browser != null) Configuration.browser = browser;
         if (browserSize != null) Configuration.browserSize = browserSize;
         if (baseUrl != null) Configuration.baseUrl = baseUrl;
         if (browserVersion != null) Configuration.browserVersion = browserVersion;
