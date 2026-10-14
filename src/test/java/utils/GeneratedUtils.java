@@ -1,8 +1,6 @@
 package utils;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -16,10 +14,6 @@ public class GeneratedUtils {
             result.append(letters.charAt(rnd.nextInt(letters.length())));
         }
         return result.toString();
-    }
-
-    public static String getRandomHex() {
-        return Long.toHexString(new SecureRandom().nextLong());
     }
 
     public static String getUserIdFromToken(String accessToken) {

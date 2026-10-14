@@ -6,14 +6,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static utils.GeneratedUtils.getRandomHex;
 import static utils.GeneratedUtils.getRandomString;
 
 public class TestData {
-    private final Faker faker = new Faker();
+    private static final Faker FAKER = new Faker();
+    private final Faker faker = FAKER;
 
-    public String username = "Autotestsforclub" + faker.name().firstName();
-    public String password = faker.name().lastName();
+    public String username = "autotest" + faker.name().firstName().toLowerCase() + faker.number().digits(8);
+    public String password = faker.internet().password(8, 16);
     public String maxLength150Symbols = getRandomString(150);
     public String tooLong151Symbols = getRandomString(151);
     public String maxPassword = getRandomString(128);
@@ -42,11 +42,11 @@ public class TestData {
     public String updatedFirstName = faker.name().firstName();
     public String updatedLastName = faker.name().lastName();
     public String updatedEmail = faker.internet().emailAddress();
-    public String clubBookTitle = "Autotest Club " + getRandomHex();
+    public String clubBookTitle = "Autotest Club " + faker.book().title();
     public String clubBookAuthors = faker.book().author();
     public Integer clubPublicationYear = faker.number().numberBetween(1900, 2025);
     public String clubDescription = faker.lorem().sentence();
-    public String clubTelegramChatLink = "https://t.me/autotest" + getRandomHex();
+    public String clubTelegramChatLink = "https://t.me/autotest" + faker.number().digits(10);
     public String maxLength255Symbols = getRandomString(255);
     public String tooLong256Symbols = getRandomString(256);
     public String maxLength200Symbols = "https://t.me/" + getRandomString(187);
@@ -59,27 +59,31 @@ public class TestData {
             "telegramChatLink", Map.of("nested", "object")
     );
 
+    public static String uniqueId() {
+        return FAKER.number().digits(10);
+    }
+
     public static Map<String, Object> clubRequiredFields() {
         Map<String, Object> clubData = new LinkedHashMap<>();
-        clubData.put("bookTitle", "Autotest Club " + getRandomHex());
-        clubData.put("bookAuthors", "Autotest Author");
-        clubData.put("publicationYear", 1999);
-        clubData.put("description", "Autotest club description");
-        clubData.put("telegramChatLink", "https://t.me/autotest" + getRandomHex());
+        clubData.put("bookTitle", "Autotest Club " + FAKER.book().title());
+        clubData.put("bookAuthors", FAKER.book().author());
+        clubData.put("publicationYear", FAKER.number().numberBetween(1900, 2025));
+        clubData.put("description", FAKER.lorem().sentence());
+        clubData.put("telegramChatLink", "https://t.me/autotest" + FAKER.number().digits(10));
 
         return clubData;
     }
 
     public static String searchableClubTitle() {
-        return "Autotest Search " + getRandomHex();
+        return "Autotest Search " + FAKER.book().title() + " " + uniqueId();
     }
 
     public static String otherUserName() {
-        return "autotestclubother" + getRandomHex();
+        return "autotestclubother" + FAKER.name().firstName().toLowerCase() + FAKER.number().digits(8);
     }
 
     public static String patcherUserName() {
-        return "autotestclubpatcher" + getRandomHex();
+        return "autotestclubpatcher" + FAKER.name().firstName().toLowerCase() + FAKER.number().digits(8);
     }
 
     public static Map<String, Object> newClubRequest(String bookTitle) {
@@ -91,11 +95,11 @@ public class TestData {
 
     public static Map<String, Object> updatedClubFields() {
         Map<String, Object> clubData = new LinkedHashMap<>();
-        clubData.put("bookTitle", "Updated Club " + getRandomHex());
-        clubData.put("bookAuthors", "Updated Author " + getRandomHex());
-        clubData.put("publicationYear", 2001);
-        clubData.put("description", "Updated club description");
-        clubData.put("telegramChatLink", "https://t.me/updated" + getRandomHex());
+        clubData.put("bookTitle", "Updated Club " + FAKER.book().title());
+        clubData.put("bookAuthors", "Updated Author " + FAKER.book().author());
+        clubData.put("publicationYear", FAKER.number().numberBetween(1900, 2025));
+        clubData.put("description", FAKER.lorem().sentence());
+        clubData.put("telegramChatLink", "https://t.me/updated" + FAKER.number().digits(10));
 
         return clubData;
     }
@@ -108,7 +112,7 @@ public class TestData {
     }
 
     public static Map<String, Object> clubReviewRequest(Integer clubId) {
-        return clubReviewRequest(clubId, "Autotest club review " + getRandomHex(), 4, 10);
+        return clubReviewRequest(clubId, "Autotest club review " + FAKER.lorem().sentence(), 4, 10);
     }
 
     public static Map<String, Object> clubReviewRequest(Integer clubId, String review, Integer assessment,
@@ -123,10 +127,10 @@ public class TestData {
     }
 
     public static String reviewerUserName() {
-        return "autotestreviewer" + getRandomHex();
+        return "autotestreviewer" + FAKER.name().firstName().toLowerCase() + FAKER.number().digits(8);
     }
 
     public static String uniqueUserName(String prefix) {
-        return prefix + getRandomHex();
+        return prefix + FAKER.name().firstName().toLowerCase() + FAKER.number().digits(8);
     }
 }

@@ -33,7 +33,7 @@ import static tests.testData.TestData.newClubRequest;
 import static tests.testData.TestData.patchedClubRequest;
 import static tests.testData.TestData.patcherUserName;
 import static tests.testData.TestData.searchableClubTitle;
-import static utils.GeneratedUtils.getRandomHex;
+import static tests.testData.TestData.uniqueId;
 import static utils.GeneratedUtils.getRandomString;
 
 public class ClubPatchTests extends TestBase {
@@ -68,7 +68,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Успешное частичное обновление клуба методом PATCH")
     public void successfulPatchClubTest() {
-        String updatedBookTitle = "Patched Club " + getRandomHex();
+        String updatedBookTitle = "Patched Club " + uniqueId();
 
         ClubResponseModel response = step("Обновление названия клуба методом PATCH", () ->
                 patchClub(clubId, patchedClubRequest(updatedBookTitle), accessToken)
@@ -90,7 +90,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Успешное частичное обновление нескольких полей клуба методом PATCH")
     public void successfulPatchClubSeveralFieldsTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
         patchData.put("bookAuthors", getRandomString(255));
         patchData.put("description", "Patched description");
         patchData.put("telegramChatLink", testData.maxLength200Symbols);
@@ -161,7 +161,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления клуба методом PATCH другого пользователя")
     public void patchOtherUserClubTest() {
-        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление чужого клуба методом PATCH", () ->
                 patchClub(clubId, patchData, otherAccessToken)
@@ -183,7 +183,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления клуба методом PATCH без Authorization")
     public void patchClubWithoutAuthTest() {
-        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление клуба методом PATCH без Authorization", () ->
                 patchClub(clubId, patchData, null)
@@ -197,7 +197,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления несуществующего клуба методом PATCH")
     public void patchMissingClubTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление несуществующего клуба методом PATCH", () ->
                 patchClub(99999999, patchData, accessToken)
@@ -225,7 +225,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Очистка пробелов вокруг bookTitle при частичном обновлении")
     public void patchClubWithTrimmedBookTitleTest() {
-        String updatedBookTitle = "Patched Trimmed " + getRandomHex();
+        String updatedBookTitle = "Patched Trimmed " + uniqueId();
 
         ClubResponseModel response = step("Обновление названия клуба с пробелами по краям", () ->
                 patchClub(clubId, patchedClubRequest("   " + updatedBookTitle + "   "), accessToken)
@@ -239,7 +239,7 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Read-only поля клуба игнорируются при частичном обновлении")
     public void patchClubReadOnlyFieldsIgnoredTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
         patchData.put("id", 99999);
         patchData.put("owner", otherUserId);
         patchData.put("members", List.of(otherUserId));
