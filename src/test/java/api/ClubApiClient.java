@@ -40,6 +40,8 @@ public class ClubApiClient extends BaseApiClient {
     public static ValidatableResponse getClubsBySearch(String searchTerm) {
         return given(request())
                 .queryParam("search", searchTerm)
+                .queryParam("page", CLUBS_DEFAULT_PAGE)
+                .queryParam("page_size", CLUBS_DEFAULT_PAGE_SIZE)
                 .when()
                 .get(CLUBS_PATH)
                 .then();
