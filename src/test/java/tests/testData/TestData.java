@@ -42,7 +42,7 @@ public class TestData {
     public String updatedFirstName = faker.name().firstName();
     public String updatedLastName = faker.name().lastName();
     public String updatedEmail = faker.internet().emailAddress();
-    public String clubBookTitle = "Autotest Club " + faker.book().title();
+    public String clubBookTitle = "Autotest Club " + faker.name().firstName();
     public String clubBookAuthors = faker.book().author();
     public Integer clubPublicationYear = faker.number().numberBetween(1900, 2025);
     public String clubDescription = faker.lorem().sentence();
