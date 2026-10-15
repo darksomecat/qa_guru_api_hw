@@ -32,8 +32,8 @@ import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.clubReviewRequest;
 import static tests.testData.TestData.newClubRequest;
-import static tests.testData.TestData.otherUserName;
 import static tests.testData.TestData.searchableClubTitle;
+import static tests.testData.TestData.uniqueUserName;
 
 public class ClubDeleteTests extends TestBase {
 
@@ -48,7 +48,7 @@ public class ClubDeleteTests extends TestBase {
                 accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
         step("Регистрация второго пользователя для проверки прав на удаление", () ->
-                memberAccessToken = AuthHelper.loginAs(otherUserName(), PASSWORDHC).accessToken());
+                memberAccessToken = AuthHelper.loginAs(uniqueUserName("other"), PASSWORDHC).accessToken());
     }
 
     @BeforeEach

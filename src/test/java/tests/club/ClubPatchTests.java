@@ -31,8 +31,8 @@ import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.newClubRequest;
 import static tests.testData.TestData.patchedClubRequest;
-import static tests.testData.TestData.patcherUserName;
 import static tests.testData.TestData.searchableClubTitle;
+import static tests.testData.TestData.uniqueUserName;
 import static tests.testData.TestData.uniqueId;
 import static utils.GeneratedUtils.getRandomString;
 
@@ -50,7 +50,7 @@ public class ClubPatchTests extends TestBase {
                 accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
         step("Регистрация второго пользователя без прав на клуб", () -> {
-            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(patcherUserName(), PASSWORDHC);
+            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(uniqueUserName("patcher"), PASSWORDHC);
             otherAccessToken = otherSession.accessToken();
             otherUserId = otherSession.userId();
         });

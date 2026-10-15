@@ -32,9 +32,9 @@ import static tests.testData.TestData.NO_PERMISSION_MESSAGE;
 import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.newClubRequest;
-import static tests.testData.TestData.otherUserName;
 import static tests.testData.TestData.searchableClubTitle;
 import static tests.testData.TestData.uniqueId;
+import static tests.testData.TestData.uniqueUserName;
 import static tests.testData.TestData.updatedClubFields;
 import static utils.GeneratedUtils.getRandomString;
 
@@ -51,7 +51,7 @@ public class ClubUpdateTests extends TestBase {
                 accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
         step("Регистрация второго пользователя без прав на клуб", () -> {
-            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(otherUserName(), PASSWORDHC);
+            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(uniqueUserName("other"), PASSWORDHC);
             otherAccessToken = otherSession.accessToken();
             otherUserId = otherSession.userId();
         });
