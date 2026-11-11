@@ -1,9 +1,8 @@
 package tests.club;
 
+import helpers.AuthHelper;
 import models.club.ClubErrorResponseModel;
 import models.club.ClubResponseModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.user.UserDetailErrorResponseModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,23 +13,17 @@ import tests.TestBase;
 import java.util.List;
 import java.util.Map;
 
-import static api.ClubApiClient.createClubWithRawBody;
-import static api.ClubApiClient.patchClubWithRawBody;
-import static api.ClubApiClient.patchClubWithoutAuth;
+import static api.ClubApiClient.createClub;
+import static api.ClubApiClient.patchClub;
 import static api.ClubApiClient.retrieveClub;
-import static api.LoginApiClient.login;
-import static api.RegistrationApiClient.register;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 import static specs.ClubSpec.badRequestClubResponseSpec;
 import static specs.ClubSpec.forbiddenClubResponseSpec;
 import static specs.ClubSpec.notFoundClubResponseSpec;
 import static specs.ClubSpec.successfulRetrieveClubResponseSpec;
 import static specs.ClubSpec.successfulUpdateClubResponseSpec;
 import static specs.ClubSpec.unauthorizedClubResponseSpec;
-import static specs.LoginSpec.successfulLoginResponseSpec;
 import static tests.testData.TestData.AUTHENTICATION_MESSAGE;
 import static tests.testData.TestData.CLUB_NOT_FOUND_MESSAGE;
 import static tests.testData.TestData.NO_PERMISSION_MESSAGE;
@@ -38,11 +31,10 @@ import static tests.testData.TestData.PASSWORDHC;
 import static tests.testData.TestData.USERNAMEHC;
 import static tests.testData.TestData.newClubRequest;
 import static tests.testData.TestData.patchedClubRequest;
-import static tests.testData.TestData.patcherUserName;
 import static tests.testData.TestData.searchableClubTitle;
-import static utils.GeneretedUtils.getRandomHex;
-import static utils.GeneretedUtils.getRandomString;
-import static utils.GeneretedUtils.getUserIdFromToken;
+import static tests.testData.TestData.uniqueUserName;
+import static tests.testData.TestData.uniqueId;
+import static utils.GeneratedUtils.getRandomString;
 
 public class ClubPatchTests extends TestBase {
 
@@ -54,43 +46,20 @@ public class ClubPatchTests extends TestBase {
 
     @BeforeAll
     public static void auth() {
-        step("Регистрация тестового пользователя и получение access-токена", () -> {
-            RegistrationBodyModel data = new RegistrationBodyModel(USERNAMEHC, PASSWORDHC);
-
-            register(data)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel loginData = new LoginBodyModel(USERNAMEHC, PASSWORDHC);
-
-            accessToken = login(loginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-        });
+        step("Регистрация тестового пользователя и получение access-токена", () ->
+                accessToken = AuthHelper.loginAs(USERNAMEHC, PASSWORDHC).accessToken());
 
         step("Регистрация второго пользователя без прав на клуб", () -> {
-            RegistrationBodyModel otherData = new RegistrationBodyModel(patcherUserName(), PASSWORDHC);
-
-            register(otherData)
-                    .statusCode(anyOf(
-                            is(201),
-                            is(400) ));
-
-            LoginBodyModel otherLoginData = new LoginBodyModel(otherData.username(), PASSWORDHC);
-
-            otherAccessToken = login(otherLoginData)
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
-
-            otherUserId = Integer.valueOf(getUserIdFromToken(otherAccessToken));
+            AuthHelper.AuthSession otherSession = AuthHelper.loginAs(uniqueUserName("patcher"), PASSWORDHC);
+            otherAccessToken = otherSession.accessToken();
+            otherUserId = otherSession.userId();
         });
     }
 
     @BeforeEach
     public void createTestClub() {
         step("Создание клуба для проверок частичного обновления", () ->
-                createdClub = createClubWithRawBody(newClubRequest(searchableClubTitle()), accessToken)
+                createdClub = createClub(newClubRequest(searchableClubTitle()), accessToken)
                         .extract().as(ClubResponseModel.class));
 
         clubId = createdClub.id();
@@ -99,10 +68,10 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Успешное частичное обновление клуба методом PATCH")
     public void successfulPatchClubTest() {
-        String updatedBookTitle = "Patched Club " + getRandomHex();
+        String updatedBookTitle = "Patched Club " + uniqueId();
 
         ClubResponseModel response = step("Обновление названия клуба методом PATCH", () ->
-                patchClubWithRawBody(clubId, patchedClubRequest(updatedBookTitle), accessToken)
+                patchClub(clubId, patchedClubRequest(updatedBookTitle), accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -121,13 +90,13 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Успешное частичное обновление нескольких полей клуба методом PATCH")
     public void successfulPatchClubSeveralFieldsTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
         patchData.put("bookAuthors", getRandomString(255));
         patchData.put("description", "Patched description");
-        patchData.put("telegramChatLink", testData.maxLeght200Symbols);
+        patchData.put("telegramChatLink", testData.maxLength200Symbols);
 
         ClubResponseModel response = step("Обновление нескольких полей клуба методом PATCH", () ->
-                patchClubWithRawBody(clubId, patchData, accessToken)
+                patchClub(clubId, patchData, accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -136,7 +105,7 @@ public class ClubPatchTests extends TestBase {
             assertThat(response.bookAuthors()).isEqualTo(patchData.get("bookAuthors"));
             assertThat(response.publicationYear()).isEqualTo(createdClub.publicationYear());
             assertThat(response.description()).isEqualTo(patchData.get("description"));
-            assertThat(response.telegramChatLink()).isEqualTo(testData.maxLeght200Symbols);
+            assertThat(response.telegramChatLink()).isEqualTo(testData.maxLength200Symbols);
         });
 
         ClubResponseModel savedClub = step("Получение обновлённого клуба по id", () ->
@@ -154,7 +123,7 @@ public class ClubPatchTests extends TestBase {
     @DisplayName("Частичное обновление клуба методом PATCH с пустым телом запроса")
     public void patchClubWithEmptyBodyTest() {
         ClubResponseModel response = step("Обновление клуба методом PATCH с пустым телом", () ->
-                patchClubWithRawBody(clubId, Map.of(), accessToken)
+                patchClub(clubId, Map.of(), accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -174,7 +143,7 @@ public class ClubPatchTests extends TestBase {
         patchData.put("telegramChatLink", testData.tooLong201Symbols);
 
         ClubErrorResponseModel errorResponse = step("Обновление клуба методом PATCH с превышением длины полей", () ->
-                patchClubWithRawBody(clubId, patchData, accessToken)
+                patchClub(clubId, patchData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -192,10 +161,10 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления клуба методом PATCH другого пользователя")
     public void patchOtherUserClubTest() {
-        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление чужого клуба методом PATCH", () ->
-                patchClubWithRawBody(clubId, patchData, otherAccessToken)
+                patchClub(clubId, patchData, otherAccessToken)
                         .spec(forbiddenClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 
@@ -214,10 +183,10 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления клуба методом PATCH без Authorization")
     public void patchClubWithoutAuthTest() {
-        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Hacked Club " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление клуба методом PATCH без Authorization", () ->
-                patchClubWithoutAuth(clubId, patchData)
+                patchClub(clubId, patchData, null)
                         .spec(unauthorizedClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 
@@ -228,10 +197,10 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Ошибка частичного обновления несуществующего клуба методом PATCH")
     public void patchMissingClubTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
 
         UserDetailErrorResponseModel errorResponse = step("Обновление несуществующего клуба методом PATCH", () ->
-                patchClubWithRawBody(99999999, patchData, accessToken)
+                patchClub(99999999, patchData, accessToken)
                         .spec(notFoundClubResponseSpec)
                         .extract().as(UserDetailErrorResponseModel.class));
 
@@ -245,7 +214,7 @@ public class ClubPatchTests extends TestBase {
         Map<String, Object> patchData = patchedClubRequest("   ");
 
         ClubErrorResponseModel errorResponse = step("Обновление названия клуба строкой из пробелов", () ->
-                patchClubWithRawBody(clubId, patchData, accessToken)
+                patchClub(clubId, patchData, accessToken)
                         .spec(badRequestClubResponseSpec)
                         .extract().as(ClubErrorResponseModel.class));
 
@@ -256,10 +225,10 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Очистка пробелов вокруг bookTitle при частичном обновлении")
     public void patchClubWithTrimmedBookTitleTest() {
-        String updatedBookTitle = "Patched Trimmed " + getRandomHex();
+        String updatedBookTitle = "Patched Trimmed " + uniqueId();
 
         ClubResponseModel response = step("Обновление названия клуба с пробелами по краям", () ->
-                patchClubWithRawBody(clubId, patchedClubRequest("   " + updatedBookTitle + "   "), accessToken)
+                patchClub(clubId, patchedClubRequest("   " + updatedBookTitle + "   "), accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 
@@ -270,14 +239,14 @@ public class ClubPatchTests extends TestBase {
     @Test
     @DisplayName("Read-only поля клуба игнорируются при частичном обновлении")
     public void patchClubReadOnlyFieldsIgnoredTest() {
-        Map<String, Object> patchData = patchedClubRequest("Patched " + getRandomHex());
+        Map<String, Object> patchData = patchedClubRequest("Patched " + uniqueId());
         patchData.put("id", 99999);
         patchData.put("owner", otherUserId);
         patchData.put("members", List.of(otherUserId));
         patchData.put("reviews", List.of());
 
         ClubResponseModel response = step("Обновление клуба с передачей read-only полей", () ->
-                patchClubWithRawBody(clubId, patchData, accessToken)
+                patchClub(clubId, patchData, accessToken)
                         .spec(successfulUpdateClubResponseSpec)
                         .extract().as(ClubResponseModel.class));
 

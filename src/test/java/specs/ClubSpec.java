@@ -11,8 +11,8 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class ClubSpec {
 
-    public static final String CLUB_RESPONSE_SCHEMA = "schemas/club/club_response_schema.json";
-    public static final String PAGINATED_CLUB_LIST_SCHEMA = "schemas/club/paginated_club_list_schema.json";
+    private static final String CLUB_RESPONSE_SCHEMA = "schemas/club/club_response_schema.json";
+    private static final String PAGINATED_CLUB_LIST_SCHEMA = "schemas/club/paginated_club_list_schema.json";
 
     public static ResponseSpecification successfulCreateClubResponseSpec = new ResponseSpecBuilder()
             .expectStatusCode(201)

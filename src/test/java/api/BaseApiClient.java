@@ -12,6 +12,8 @@ public abstract class BaseApiClient {
     protected static final String USER_ME_PATH = "/users/me/";
     protected static final String CLUBS_PATH = "/clubs/";
     protected static final String CLUB_REVIEWS_PATH = "/clubs/reviews/";
+    protected static final int CLUBS_DEFAULT_PAGE = 1;
+    protected static final int CLUBS_DEFAULT_PAGE_SIZE = 10;
 
     protected static final String EMPTY_BODY = "{}";
 

@@ -10,7 +10,7 @@ public class LoginSpec {
 
     public static ResponseSpecification successfulLoginResponseSpec = new ResponseSpecBuilder()
             .expectStatusCode(200)
-            .expectBody(matchesJsonSchemaInClasspath("schemas/login/login_body_response_shema.json"))
+            .expectBody(matchesJsonSchemaInClasspath("schemas/login/login_body_response_schema.json"))
             .log(ALL)
             .build();
 

@@ -8,6 +8,24 @@ import static io.restassured.RestAssured.given;
 
 public class UserApiClient extends BaseApiClient {
 
+    @Step("GET /users/me/ — получение профиля текущего пользователя")
+    public static ValidatableResponse getCurrentUser(String accessToken) {
+        return given(request())
+                .header("Authorization", "Bearer " + accessToken)
+                .when()
+                .get(USER_ME_PATH)
+                .then();
+    }
+
+    @Step("GET /users/me/ — получение профиля текущего пользователя")
+    public static ValidatableResponse getMe(String accessToken) {
+        return given(request())
+                .header("Authorization", "Bearer " + accessToken)
+                .when()
+                .get(USER_ME_PATH)
+                .then();
+    }
+
     @Step("PUT /users/me/ — полное обновление профиля пользователя")
     public static ValidatableResponse updateUser(UpdateUserBodyModel updateBody, String accessToken) {
         return given(request())

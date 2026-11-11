@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org",
+  "type": "object",
+  "properties": {
+    "club": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "review": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "assessment": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "readPages": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
